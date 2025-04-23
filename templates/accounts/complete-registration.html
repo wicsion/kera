@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Заголовок профиля -->
+    <div class="card border-dark mb-4">
+        <div class="card-body">
+            <div class="d-flex align-items-center">
+                <div class="me-4">
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}"
+                             class="rounded-circle border border-3"
+                             width="120"
+                             height="120"
+                             alt="Аватар">
+                    {% else %}
+                        <div class="bg-secondary rounded-circle border border-3"
+                             style="width: 120px; height: 120px;"></div>
+                    {% endif %}
+                </div>
+                <div>
+                    <h1 class="mb-1">{{ user.get_full_name }}</h1>
+                    <h4 class="text-muted">{{ user.specialization }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основные секции -->
+    <div class="row g-4">
+        <!-- Левая колонка -->
+        <div class="col-md-6">
+            <!-- Условия работы -->
+            <div class="card border-dark mb-3">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">Условия работы</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-1">График работы</p>
+                            <p class="fw-bold">Полный день</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1">Тип занятости</p>
+                            <p class="fw-bold">Полная занятость</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Контакты -->
+            <div class="card border-dark mb-3">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">Контакты</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <p class="mb-0">Телефон:</p>
+                            <p class="fw-bold">+7 (XXX) XXX-XX-XX</p>
+                        </div>
+                        <div class="col-12">
+                            <p class="mb-0">Email:</p>
+                            <p class="fw-bold">{{ user.email }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая колонка -->
+        <div class="col-md-6">
+            <!-- Объекты недвижимости -->
+            <div class="card border-dark mb-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Мои объекты</h4>
+                    <a href="{% url 'property-create' %}" class="btn btn-sm btn-success">
+                        <i class="bi bi-plus-lg"></i> Добавить
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for prop in properties %}
+                        <a href="{% url 'property-detail' prop.id %}"
+                           class="list-group-item list-group-item-action d-flex justify-content-between">
+                            <span>{{ prop.title }}</span>
+                            <span>{{ prop.price }} ₽</span>
+                        </a>
+                        {% empty %}
+                        <div class="alert alert-info mb-0">Нет активных объектов</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Отзывы -->
+    <div class="card border-dark mt-3">
+        <div class="card-header bg-light">
+            <h4 class="mb-0">Отзывы клиентов</h4>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for review in reviews %}
+                <div class="col-md-6">
+                    <div class="card border-secondary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <h5>{{ review.author }}</h5>
+                                <div class="text-warning">
+                                    {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <p class="mb-0">{{ review.text }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">Отзывов пока нет</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Подписка -->
+    <div class="card border-dark mt-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Премиум доступ</h4>
+            {% if active_subscription %}
+            <span class="badge bg-success">Активна до {{ active_subscription.end_date|date:"d.m.Y" }}</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <div class="d-grid gap-2">
+                <a href="{% url 'subscription-plans' %}"
+                   class="btn btn-lg btn-primary">
+                    {% if active_subscription %}Продлить подписку{% else %}Активировать премиум{% endif %}
+                </a>
+                <button class="btn btn-outline-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#archiveModal">
+                    Архивировать профиль
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Модальное окно архивации -->
+<div class="modal fade" id="archiveModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Архивация профиля</h5>
+            </div>
+            <div class="modal-body">
+                Ваш профиль будет скрыт из поиска до следующей активации.
+            </div>
+            <div class="modal-footer">
+                <form method="post" action="{% url 'toggle-archive' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Подтвердить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

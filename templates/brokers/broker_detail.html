@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-body text-center">
+                    {% if broker.avatar %}
+                    <img src="{{ broker.avatar.url }}" class="rounded-circle mb-3" width="200" height="200" alt="{{ broker.user.get_full_name }}">
+                    {% else %}
+                    <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 200px; height: 200px;">
+                        <i class="bi bi-person-fill text-white" style="font-size: 4rem;"></i>
+                    </div>
+                    {% endif %}
+                    <h3>{{ broker.user.get_full_name }}</h3>
+                    <p class="text-muted">{{ broker.specialization }}</p>
+                    
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="text-center px-3">
+                            <div class="h4 mb-0">{{ broker.experience }}+</div>
+                            <small class="text-muted">лет опыта</small>
+                        </div>
+                        <div class="text-center px-3 border-start">
+                            <div class="h4 mb-0">{{ broker_properties.count }}</div>
+                            <small class="text-muted">объектов</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="badge bg-primary">Лицензия: {{ broker.license_number }}</span>
+                    </div>
+                    
+                    <button class="btn btn-primary w-100 mb-3" data-bs-toggle="modal" data-bs-target="#contactModal">
+                        <i class="bi bi-telephone"></i> Связаться
+                    </button>
+                    
+                    <a href="{% url 'broker-review' broker.id %}" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-pencil-square"></i> Оставить отзыв
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">О брокере</h4>
+                </div>
+                <div class="card-body">
+                    <p>{{ broker.about }}</p>
+                    
+                    <h5 class="mt-4">Специализация</h5>
+                    <ul>
+                        {% for item in broker.specialization.split ',' %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Объекты ({{ broker_properties.count }})</h4>
+                    <a href="{% url 'property-list' %}?broker={{ broker.id }}" class="btn btn-sm btn-outline-primary">
+                        Смотреть все
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        {% for property in broker_properties|slice:":4" %}
+                        <div class="col">
+                            <div class="card h-100">
+                                <img src="{{ property.main_image.url }}" class="card-img-top property-thumb" alt="{{ property.title }}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ property.title }}</h5>
+                                    <p class="card-text text-muted">{{ property.location }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="h5 text-primary">{{ property.price }} ₽</span>
+                                        <span class="text-muted">{{ property.area }} м²</span>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white border-top-0">
+                                    <a href="{% url 'property-detail' property.id %}" class="btn btn-sm btn-outline-primary w-100">
+                                        Подробнее
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">Нет доступных объектов</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Отзывы ({{ reviews.count }})</h4>
+                    <div class="d-flex align-items-center">
+                        <span class="me-2">Рейтинг: {{ broker.rating|default:"-" }}/5</span>
+                        <div class="text-warning">
+                            {% for i in "12345" %}
+                            <i class="bi bi-star{% if i|add:0 > broker.rating|default:0 %}-fill{% else %}-fill{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% for review in reviews|slice:":3" %}
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h5>{{ review.client.get_full_name }}</h5>
+                            <div class="text-warning">
+                                {% for i in "12345" %}
+                                <i class="bi bi-star{% if i|add:0 <= review.rating %}-fill{% endif %}"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="text-muted small">{{ review.created_at|date:"d.m.Y" }}</p>
+                        <p>{{ review.comment }}</p>
+                    </div>
+                    {% empty %}
+                    <div class="alert alert-info">Отзывов пока нет</div>
+                    {% endfor %}
+                    
+                    {% if reviews.count > 3 %}
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-outline-primary">Показать все отзывы</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Контактное модальное окно -->
+<div class="modal fade" id="contactModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Связаться с {{ broker.user.get_full_name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Ваше имя</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Телефон</label>
+                        <input type="tel" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Сообщение</label>
+                        <textarea class="form-control" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Отправить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .property-thumb {
+        height: 150px;
+        object-fit: cover;
+    }
+    .sticky-top {
+        position: sticky;
+        z-index: 100;
+    }
+</style>
+{% endblock %}

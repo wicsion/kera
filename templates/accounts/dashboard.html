@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* Основные стили */
+    .dashboard-section {
+        border: 3px solid #000;
+        border-radius: 15px;
+        margin: 20px 0;
+        padding: 25px;
+        background: white;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        border-bottom: 2px solid #000;
+        margin-bottom: 20px;
+        padding-bottom: 8px;
+    }
+
+    /* Стили для аватара */
+    .oval-avatar {
+        border-radius: 50% / 30%;
+        width: 180px;
+        height: 180px;
+        object-fit: cover;
+        border: 2px solid #000 !important;
+        margin: 0 auto 15px;
+    }
+
+    /* Стили для кнопок */
+    .btn-custom {
+        border: 2px solid #000 !important;
+        border-radius: 25px !important;
+        padding: 8px 30px !important;
+        font-weight: 600 !important;
+    }
+
+    /* Модальное окно */
+    .oval-modal {
+        border-radius: 25px !important;
+        overflow: hidden;
+        border: 2px solid #000 !important;
+    }
+
+    /* Формы */
+    .custom-form-control {
+        border: 2px solid #000 !important;
+        border-radius: 15px !important;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="row">
+        <!-- Боковая панель -->
+        <div class="col-md-4 mb-4">
+            <!-- Карточка профиля -->
+            <div class="dashboard-section text-center">
+                <!-- Аватар -->
+                <div>
+                    {% if user.avatar %}
+                        <img src="{{ user.avatar.url }}"
+                             class="oval-avatar"
+                             alt="Аватар">
+                    {% else %}
+                        <div class="oval-avatar bg-secondary"></div>
+                    {% endif %}
+                </div>
+
+                <!-- Информация -->
+                <h2 class="mb-1" style="font-weight: 700">{{ user.get_full_name }}</h2>
+                <p class="text-muted mb-1">{{ user.specialization }}</p>
+
+                <!-- Роль пользователя -->
+                <div class="mb-3">
+                    {% if user.user_type == 'broker' %}
+                        <span class="badge bg-dark">Лицензированный риелтор</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Клиент платформы</span>
+                    {% endif %}
+                </div>
+
+                <!-- Кнопка редактирования -->
+                <a href="{% url 'profile-update' %}"
+                   class="btn btn-custom d-block mx-auto">
+                    <i class="bi bi-pencil-square"></i> Редактировать профиль
+                </a>
+            </div>
+
+            <!-- Отзывы (для риелторов) -->
+            {% if user.user_type == 'broker' %}
+                <div class="dashboard-section mt-4">
+                    <h5 class="section-title">Отзывы клиентов</h5>
+                    {% for review in user.reviews.all %}
+                        <div class="p-3 mb-3" style="border: 2px solid #000; border-radius: 15px">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ review.client.get_full_name }}</strong>
+                                <span class="text-warning">★ {{ review.rating }}/5</span>
+                            </div>
+                            <p class="mt-2 mb-0">{{ review.comment }}</p>
+                        </div>
+                    {% empty %}
+                        <div class="alert alert-info">Пока нет отзывов</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Основной контент -->
+        <div class="col-md-8">
+            {% if user.user_type == 'client' %}
+                <!-- Форма поиска -->
+                <div class="dashboard-section mb-4">
+                    <form class="row g-3">
+                        <div class="col-md-3">
+                            <select class="form-select custom-form-control" name="type">
+                                <option value="new">Новостройки</option>
+                                <option value="secondary">Вторичка</option>
+                                <option value="commercial">Коммерческая</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number"
+                                   class="form-control custom-form-control"
+                                   placeholder="Бюджет от, ₽">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number"
+                                   class="form-control custom-form-control"
+                                   placeholder="Бюджет до, ₽">
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-custom w-100">
+                                <i class="bi bi-search"></i> Найти
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Рекомендуемые риелторы -->
+                <div class="dashboard-section">
+                    <h5 class="section-title">Рекомендуемые риелторы</h5>
+                    <div class="row">
+                        {% for broker in top_brokers %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100" style="border: 2px solid #000; border-radius: 15px">
+                                    <img src="{{ broker.avatar.url }}"
+                                         class="card-img-top"
+                                         alt="{{ broker.get_full_name }}"
+                                         style="height: 200px; object-fit: cover">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title mb-3">{{ broker.get_full_name }}</h5>
+                                        <button class="btn btn-custom w-100">
+                                            Выбрать
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if user.user_type == 'broker' %}
+                <!-- Платные услуги -->
+                <div class="dashboard-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="section-title mb-0">Платные услуги</h5>
+                        <i class="bi bi-credit-card fs-5"></i>
+                    </div>
+                    {% if active_subscription %}
+                        <div class="alert alert-success">
+                            Активна до {{ active_subscription.end_date|date:"d.m.Y" }}
+                        </div>
+                        <button class="btn btn-custom"
+                                data-bs-toggle="modal"
+                                data-bs-target="#archiveModal">
+                            Архивировать
+                        </button>
+                    {% else %}
+                        <div class="alert alert-warning">Подписка не активна</div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно архивации -->
+<div class="modal fade" id="archiveModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content oval-modal">
+            <div class="modal-header justify-content-center">
+                <h5 class="modal-title fw-bold">Подтверждение архивации</h5>
+            </div>
+            <div class="modal-body text-center">
+                <p class="mb-0">Профиль будет скрыт из поиска.</p>
+                <p>Вы сможете восстановить его позже.</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-custom">
+                    Подтвердить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

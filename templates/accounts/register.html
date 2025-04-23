@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 min-vh-100 d-flex align-items-center">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-lg border-0" style="border-radius: 2rem; border: 3px solid #dee2e6;">
+                <div class="card-body p-5">
+                    <h2 class="card-title text-center mb-4 display-3 fw-bold text-uppercase"
+                        style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
+                        Добро пожаловать в RealEstatePro!
+                    </h2>
+
+                    <!-- Вывод ошибки, если она есть -->
+     {% if form.errors %}
+<div class="alert alert-danger">
+    {% for field, errors in form.errors.items %}
+        {% for error in errors %}
+            {{ error }}<br>
+        {% endfor %}
+    {% endfor %}
+</div>
+{% endif %}
+                    <form method="post" novalidate class="mx-auto" style="max-width: 500px;">
+                        {% csrf_token %}
+
+                        <!-- Логин -->
+                        <div class="mb-4 text-center">
+                            <div class="mb-3">
+                                <span class="form-label fs-4 fw-bold d-block">ЛОГИН</span>
+                            </div>
+                            <input type="text"
+                                   name="username"
+                                   class="form-control form-control-lg rounded-pill px-4 text-center fs-4 border-3"
+                                   style="height: 65px; border-color: #6c757d !important; width: 80%; margin: 0 auto;"
+                                   required
+                                   autofocus>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-4 text-center">
+                            <div class="mb-3">
+                                <span class="form-label fs-4 fw-bold d-block">EMAIL</span>
+                            </div>
+                            <input type="email"
+                                   name="email"
+                                   class="form-control form-control-lg rounded-pill px-4 text-center fs-4 border-3"
+                                   style="height: 65px; border-color: #6c757d !important; width: 80%; margin: 0 auto;"
+                                   required>
+                        </div>
+
+
+
+                        <!-- Пароль -->
+                        <div class="mb-4 text-center">
+                            <div class="mb-3">
+                                <span class="form-label fs-4 fw-bold d-block">ПАРОЛЬ</span>
+                            </div>
+                            <input type="password"
+                                   name="password1"
+                                   class="form-control form-control-lg rounded-pill px-4 text-center fs-4 border-3"
+                                   style="height: 65px; border-color: #6c757d !important; width: 80%; margin: 0 auto;"
+                                   required>
+                        </div>
+
+                        <!-- Подтверждение пароля -->
+                        <div class="row justify-content-center mb-4">
+                            <div class="col-12 text-center">
+                                <div class="mb-3">
+                                    <span class="form-label fs-4 fw-bold d-block">ПОДТВЕРДИТЕ ПАРОЛЬ</span>
+                                </div>
+                                <input type="password"
+                                       name="password2"
+                                       class="form-control form-control-lg rounded-pill px-4 text-center fs-4 border-3"
+                                       style="height: 65px; border-color: #6c757d !important; width: 80%; margin: 0 auto;"
+                                       required>
+                            </div>
+                        </div>
+
+                        <!-- Условия пользования -->
+                        <div class="row justify-content-center mb-4">
+                            <div class="col-12 text-center">
+                                <div class="form-check d-inline-block">
+                                    <input type="checkbox"
+                                           class="form-check-input rounded-circle border-2"
+                                           id="terms"
+                                           required
+                                           style="transform: scale(1.8); margin-right: 12px;">
+                                    <label class="form-check-label fs-4 fw-bold" for="terms">
+                                        ПРИНИМАЮ УСЛОВИЯ ПОЛЬЗОВАНИЯ
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Кнопка регистрации -->
+                        <div class="mb-4 text-center">
+                            <button type="submit"
+                                    class="btn btn-primary btn-lg rounded-pill py-3 px-5 fs-4 fw-bold"
+                                    style="min-width: 280px; border: 3px solid #fff; letter-spacing: 1.5px;">
+                                ЗАРЕГИСТРИРОВАТЬСЯ
+                            </button>
+                        </div>
+
+                        <!-- Ссылка на вход -->
+                        <div class="text-center fs-5">
+                            <span class="text-muted fw-bold">Уже с нами?</span>
+                            <a href="{% url 'login' %}"
+                               class="text-decoration-none text-muted fw-bold ms-2">
+                                - ВОЙТИ В АККАУНТ
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rounded-pill {
+        border-radius: 50rem !important;
+    }
+    .form-control {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    .fw-bold {
+        font-weight: 700 !important;
+    }
+    .card {
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+    }
+    /* Отделение секций */
+    .row.justify-content-center {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #dee2e6;
+    }
+</style>
+{% endblock %}

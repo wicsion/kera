@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 min-vh-100 d-flex align-items-center">
+    <div class="row justify-content-center w-100">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-lg border-0" style="border-radius: 2rem; border: 3px solid #dee2e6;">
+                <div class="card-body p-5">
+                    <h2 class="card-title text-center mb-4 display-3 fw-bold text-uppercase"
+                        style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
+                        С возвращением на RealEstatePro!
+                    </h2>
+
+                    <form method="post" novalidate class="mx-auto" style="max-width: 500px;">
+                        {% csrf_token %}
+
+                        <!-- Логин -->
+                        <div class="mb-4 text-center">
+                            <div class="mb-3">
+                                <span class="form-label fs-4 fw-bold d-block">ЛОГИН</span>
+                            </div>
+                            <input type="text"
+                                   name="username"
+                                   class="form-control form-control-lg rounded-pill px-4 text-center fs-4 border-3"
+                                   style="height: 65px; border-color: #6c757d !important; width: 80%; margin: 0 auto;"
+                                   required
+                                   autofocus>
+                        </div>
+
+                        <!-- Пароль -->
+                        <div class="mb-4 text-center">
+                            <div class="mb-3">
+                                <span class="form-label fs-4 fw-bold d-block">ПАРОЛЬ</span>
+                            </div>
+                            <input type="password"
+                                   name="password"
+                                   class="form-control form-control-lg rounded-pill px-4 text-center fs-4 border-3"
+                                   style="height: 65px; border-color: #6c757d !important; width: 80%; margin: 0 auto;"
+                                   required>
+                        </div>
+
+                        <!-- Чекбокс - отдельная секция -->
+                        <div class="row justify-content-center mb-4">
+                            <div class="col-12 text-center">
+                                <div class="form-check d-inline-block">
+                                    <input type="checkbox"
+                                           class="form-check-input rounded-circle border-2"
+                                           id="rememberMe"
+                                           style="transform: scale(1.8); margin-right: 12px;">
+                                    <label class="form-check-label fs-4 fw-bold">
+                                        ЗАПОМНИТЬ МЕНЯ
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Кнопка Входа -->
+                        <div class="mb-4 text-center">
+                            <button type="submit"
+                                    class="btn btn-primary btn-lg rounded-pill py-3 px-5 fs-4 fw-bold"
+                                    style="min-width: 280px; border: 3px solid #fff; letter-spacing: 1.5px;">
+                                ВОЙТИ
+                            </button>
+                        </div>
+
+                        <!-- Соцсети - отдельная секция -->
+                        <div class="row justify-content-center mb-4">
+                            <div class="col-12 text-center">
+                                <p class="text-muted mb-3 fs-5 fw-bold">— ИЛИ ВОЙДИТЕ ЧЕРЕЗ —</p>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <a href="#" class="btn btn-outline-dark rounded-pill px-4 py-2 fs-5 fw-bold border-2">
+                                        <i class="bi bi-google me-2"></i>GOOGLE
+                                    </a>
+                                    <a href="#" class="btn btn-outline-primary rounded-pill px-4 py-2 fs-5 fw-bold border-2">
+                                        <i class="bi bi-facebook me-2"></i>FACEBOOK
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ссылки - отдельная секция -->
+                        <div class="row justify-content-center">
+                            <div class="col-12 text-center fs-5">
+                                <a href="{% url 'password_reset' %}"
+                                   class="text-decoration-none text-muted fw-bold me-3">
+                                    Забыли пароль? -
+                                </a>
+                                <a href="{% url 'register' %}"
+                                   class="text-decoration-none text-muted fw-bold">
+                                    Создать аккаунт
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .rounded-pill {
+        border-radius: 50rem !important;
+    }
+    .form-control {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    }
+    .fw-bold {
+        font-weight: 700 !important;
+    }
+    .card {
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+    }
+    .row.justify-content-center {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #dee2e6;
+    }
+</style>
+{% endblock %}

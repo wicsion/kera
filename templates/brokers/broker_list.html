@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Брокеры недвижимости</h1>
+        <form class="d-flex" method="get">
+            <input class="form-control me-2" type="search" name="search" placeholder="Поиск брокеров...">
+            <button class="btn btn-outline-primary" type="submit">Найти</button>
+        </form>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for broker in brokers %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="position-relative">
+                    {% if broker.avatar %}
+                    <img src="{{ broker.avatar.url }}" class="card-img-top broker-avatar" alt="{{ broker.user.get_full_name }}">
+                    {% else %}
+                    <div class="bg-secondary broker-avatar d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-fill text-white" style="font-size: 3rem;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="position-absolute top-0 end-0 bg-primary text-white px-2 py-1 m-2 small rounded">
+                        Рейтинг: {{ broker.rating|default:"-" }}/5
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ broker.user.get_full_name }}</h5>
+                    <p class="card-text text-muted">{{ broker.specialization }}</p>
+                    <div class="mb-3">
+                        <span class="badge bg-primary">Опыт: {{ broker.experience }} лет</span>
+                        <span class="badge bg-success ms-1">Лицензия: {{ broker.license_number }}</span>
+                    </div>
+                    <p class="card-text">{{ broker.about|truncatewords:20 }}</p>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <a href="{% url 'broker-detail' broker.id %}" class="btn btn-primary w-100">
+                        Подробнее <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">Брокеры не найдены</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+            </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+    .broker-avatar {
+        height: 250px;
+        object-fit: cover;
+        width: 100%;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Каталог недвижимости</h1>
+        <div>
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+                <i class="bi bi-funnel"></i> Фильтры
+            </button>
+            {% if user.is_authenticated and user.user_type == 'broker' %}
+            <a href="{% url 'property-create' %}" class="btn btn-primary ms-2">
+                <i class="bi bi-plus"></i> Добавить объект
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="collapse mb-4" id="filterCollapse">
+        <div class="card card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Тип недвижимости</label>
+
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Количество комнат</label>
+
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Локация</label>
+
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Цена от</label>
+                    <div class="input-group">
+
+                        <span class="input-group-text">₽</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Цена до</label>
+                    <div class="input-group">
+
+                        <span class="input-group-text">₽</span>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Применить</button>
+                    <a href="{% url 'property-list' %}" class="btn btn-outline-secondary ms-2">Сбросить</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for property in filter.qs %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="position-relative">
+                    <img src="{{ property.main_image.url }}" class="card-img-top property-image" alt="{{ property.title }}">
+                    {% if property.is_premium %}
+                    <span class="position-absolute top-0 end-0 bg-warning text-dark px-2 py-1 m-2 small rounded">
+                        PREMIUM
+                    </span>
+                    {% endif %}
+                    <span class="position-absolute bottom-0 start-0 bg-primary text-white px-2 py-1 m-2 small rounded">
+                        {{ property.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ property.title }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="bi bi-geo-alt"></i> {{ property.location }}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="h4 text-primary">{{ property.price }} ₽</span>
+                        <span class="text-muted">{{ property.area }} м²</span>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted mb-3">
+                        <span><i class="bi bi-door-open"></i> {{ property.rooms }} комн.</span>
+                        <span><i class="bi bi-building"></i> {{ property.property_type }}</span>
+                    </div>
+                    {% if property.broker %}
+                    <div class="d-flex align-items-center small">
+                        <i class="bi bi-person-check text-primary me-1"></i>
+                        <span>Брокер: {{ property.broker.get_full_name }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'property-detail' property.id %}" class="btn btn-primary">
+                            Подробнее
+                        </a>
+                        {% if user.is_authenticated %}
+                        <button class="btn btn-outline-secondary toggle-favorite" data-property-id="{{ property.id }}">
+                            <i class="bi bi-heart{% if property in user.favorites.all %}-fill text-danger{% endif %}"></i> Избранное
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">Объекты не найдены. Попробуйте изменить параметры фильтрации.</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
+            </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<script>
+document.querySelectorAll('.toggle-favorite').forEach(button => {
+    button.addEventListener('click', function() {
+        const propertyId = this.dataset.propertyId;
+        fetch(`/properties/${propertyId}/favorite/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            const icon = this.querySelector('i');
+            if (data.is_favorite) {
+                icon.classList.remove('bi-heart');
+                icon.classList.add('bi-heart-fill', 'text-danger');
+            } else {
+                icon.classList.remove('bi-heart-fill', 'text-danger');
+                icon.classList.add('bi-heart');
+            }
+        });
+    });
+});
+</script>
+
+<style>
+    .property-image {
+        height: 200px;
+        object-fit: cover;
+    }
+    .card {
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,59 @@
+from django.contrib import admin
+from .models import PropertyType, Property, PropertyImage, Favorite
+
+
+class PropertyImageInline(admin.TabularInline):
+    model = PropertyImage
+    extra = 1
+    fields = ('image', 'order')
+    ordering = ('order',)
+
+
+@admin.register(PropertyType)
+class PropertyTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'icon')
+    search_fields = ('name',)
+
+
+@admin.register(Property)
+class PropertyAdmin(admin.ModelAdmin):
+    list_display = ('title', 'price', 'property_type', 'status', 'broker', 'developer', 'is_approved', 'created_at')
+    list_filter = ('status', 'property_type', 'is_approved', 'is_premium')
+    search_fields = ('title', 'description', 'address', 'broker__username', 'developer__username')
+    list_editable = ('status', 'is_approved')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'description', 'property_type', 'is_approved', 'status')
+        }),
+        ('Характеристики', {
+            'fields': ('price', 'area', 'rooms', 'location', 'address')
+        }),
+        ('Метаданные', {
+            'fields': ('broker', 'developer', 'is_premium', 'main_image')
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    inlines = [PropertyImageInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('broker', 'developer', 'property_type')
+
+
+@admin.register(PropertyImage)
+class PropertyImageAdmin(admin.ModelAdmin):
+    list_display = ('property', 'image', 'order')
+    list_editable = ('order',)
+    list_filter = ('property__status',)
+    search_fields = ('property__title',)
+
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'property', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('user__username', 'property__title')
+    readonly_fields = ('created_at',)

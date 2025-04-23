@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}{{ form.instance.pk|yesno:"Редактировать,Создать" }} объект - RealEstatePro{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">{{ form.instance.pk|yesno:"Редактировать,Создать" }} объект недвижимости</h1>
+
+<form method="post" enctype="multipart/form-data" class="bg-white p-6 rounded shadow-md space-y-4">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+        Сохранить
+    </button>
+</form>
+{% endblock %}
