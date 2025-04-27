@@ -62,22 +62,46 @@ class CompleteRegistrationView(LoginRequiredMixin, View):
 
     def get(self, request):
         # Инициализация обеих форм при GET-запросе
-        role_form = RoleSelectionForm()
+        role_form = RoleSelectionForm(instance=request.user)
         profile_form = ProfileForm(instance=request.user)
         return render(request, self.template_name, {
             'role_form': role_form,
             'profile_form': profile_form
         })
 
+    def form_valid(self, form):
+        user = self.request.user
+        # Сохраняем роль
+        user.user_type = form.cleaned_data['role']
+        # Сохраняем остальные поля профиля
+        user.last_name = form.cleaned_data['last_name']
+        user.first_name = form.cleaned_data['first_name']
+        user.patronymic = form.cleaned_data['patronymic']
+        user.phone = form.cleaned_data['phone']
+        user.avatar = form.cleaned_data['avatar']
+        user.passport = form.cleaned_data['passport']
+        user.save()
+        return super().form_valid(form)
+
     def post(self, request):
-        role_form = RoleSelectionForm(request.POST)
+        role_form = RoleSelectionForm(request.POST, instance=request.user)  # Добавьте instance
         profile_form = ProfileForm(request.POST, request.FILES, instance=request.user)
 
         if role_form.is_valid() and profile_form.is_valid():
             user = profile_form.save(commit=False)
+            # Обновляем данные из role_form
             user.user_type = role_form.cleaned_data['role']
+            user.is_verified = True  # Подтверждаем профиль
             user.save()
+            # Сохраняем обе формы
+            role_form.save()
+            profile_form.save()
             return redirect('dashboard')
+
+        return render(request, self.template_name, {
+            'role_form': role_form,
+            'profile_form': profile_form
+        })
 
         # При ошибках снова показываем формы с данными
         return render(request, self.template_name, {
@@ -85,18 +109,6 @@ class CompleteRegistrationView(LoginRequiredMixin, View):
             'profile_form': profile_form
         })
 
-
-def verify_email(request, token):
-    try:
-        user = User.objects.get(verification_token=token)
-        user.is_verified = True  # Убедитесь, что это поле используется
-        user.is_active = True    # Активируем пользователя
-        user.verification_token = None
-        user.save()
-        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        return redirect('complete_registration')
-    except User.DoesNotExist:
-        return redirect('invalid_token')
 
 
 # Остальные представления остаются без изменений
@@ -165,3 +177,35 @@ def dashboard_view(request):
 
 def invalid_token_view(request):
     return render(request, 'accounts/invalid_token.html')
+
+
+class RoleSelectionView(LoginRequiredMixin, UpdateView):
+    template_name = 'accounts/role_selection.html'
+    form_class = RoleSelectionForm
+    success_url = reverse_lazy('dashboard')
+
+    def get_object(self):
+        return self.request.user
+
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.is_verified = True  # Помечаем как верифицированного
+        if user.is_profile_complete:
+            user.is_verified = True
+        user.save()
+        return super().form_valid(form)
+
+
+def verify_email(request, token):
+    try:
+        user = User.objects.get(verification_token=token)
+        user.is_active = True
+        user.verification_token = ''
+        user.save()
+        user.backend = 'django.contrib.auth.backends.ModelBackend'  # <-- Добавлено
+        login(request, user)  # Теперь ошибки не будет
+
+
+        return redirect('role_selection')  # Редирект на завершение регистрации
+    except User.DoesNotExist:
+        return redirect('invalid_token')

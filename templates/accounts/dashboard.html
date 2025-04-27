@@ -73,13 +73,15 @@
                 <p class="text-muted mb-1">{{ user.specialization }}</p>
 
                 <!-- Роль пользователя -->
-                <div class="mb-3">
-                    {% if user.user_type == 'broker' %}
-                        <span class="badge bg-dark">Лицензированный риелтор</span>
-                    {% else %}
-                        <span class="badge bg-secondary">Клиент платформы</span>
-                    {% endif %}
-                </div>
+   <div class="mb-3">
+    {% if user.user_type == 'broker' %}
+        <span class="badge bg-dark">Лицензированный риелтор</span>
+    {% elif user.user_type == 'developer' %}
+        <span class="badge bg-primary">Застройщик</span>
+    {% else %}
+        <span class="badge bg-secondary">Клиент платформы</span>
+    {% endif %}
+</div>
 
                 <!-- Кнопка редактирования -->
                 <a href="{% url 'profile-update' %}"

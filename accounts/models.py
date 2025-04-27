@@ -60,7 +60,7 @@ class User(AbstractUser):
         ordering = ['-date_joined']
 
     def __str__(self):
-        return f"{self.get_full_name()} ({self.get_user_type_display()})"
+        return f"{self.get_full_name()} ({self.user_type})"
 
     def get_full_name(self):
         return f"{self.last_name} {self.first_name} {self.patronymic}".strip()
@@ -72,6 +72,17 @@ class User(AbstractUser):
     @property
     def is_developer(self):
         return self.user_type == self.UserType.DEVELOPER
+
+    @property
+    def is_profile_complete(self):
+        """Проверка заполненности обязательных полей"""
+        return all([
+            self.user_type,
+            self.last_name,
+            self.first_name,
+            self.phone,
+            self.passport
+        ])
 
 class Subscription(models.Model):
     user = models.ForeignKey(

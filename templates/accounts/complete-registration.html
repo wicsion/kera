@@ -138,10 +138,10 @@
         </div>
         <div class="card-body">
             <div class="d-grid gap-2">
-                <a href="{% url 'subscription-plans' %}"
+
                    class="btn btn-lg btn-primary">
                     {% if active_subscription %}Продлить подписку{% else %}Активировать премиум{% endif %}
-                </a>
+
                 <button class="btn btn-outline-danger"
                         data-bs-toggle="modal"
                         data-bs-target="#archiveModal">
@@ -164,7 +164,7 @@
                 Ваш профиль будет скрыт из поиска до следующей активации.
             </div>
             <div class="modal-footer">
-                <form method="post" action="{% url 'toggle-archive' %}">
+
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">Подтвердить</button>
                 </form>

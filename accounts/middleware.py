@@ -21,20 +21,20 @@ class ProfileCompletionMiddleware:
 
     def __call__(self, request):
         excluded_paths = [
-            '/accounts/complete-registration/',
             '/accounts/logout/',
             '/static/',
             '/media/',
             '/accounts/verify-email/',
             '/accounts/invalid-token/',
-            '/accounts/login/'
+            '/accounts/login/',
+            '/accounts/select-role/',
+            '/dashboard/'
+
         ]
 
-        if request.path in excluded_paths:
-            return self.get_response(request)
-
         if request.user.is_authenticated:
-            pass
-
+            if not request.user.is_profile_complete:
+                if request.path not in excluded_paths:
+                    return redirect('role_selection')
 
         return self.get_response(request)
