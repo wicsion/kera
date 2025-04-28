@@ -6,7 +6,6 @@ class ActivityLoggerMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Логирование активности
         response = self.get_response(request)
         if request.user.is_authenticated:
             UserActivity.objects.create(
@@ -20,6 +19,11 @@ class ProfileCompletionMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        def __call__(self, request):
+            if request.user.is_authenticated:
+                print(f"Профиль завершен: {request.user.is_profile_complete}")
+                print(f"Данные пользователя: {request.user.__dict__}")
+
         excluded_paths = [
             '/accounts/logout/',
             '/static/',
@@ -28,13 +32,13 @@ class ProfileCompletionMiddleware:
             '/accounts/invalid-token/',
             '/accounts/login/',
             '/accounts/select-role/',
-            '/dashboard/'
-
+            '/accounts/dashboard/',
+            '/accounts/complete-registration/'  # Добавлено исключение
         ]
 
         if request.user.is_authenticated:
             if not request.user.is_profile_complete:
                 if request.path not in excluded_paths:
-                    return redirect('role_selection')
+                    return redirect('complete_registration')
 
         return self.get_response(request)

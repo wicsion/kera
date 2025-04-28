@@ -1,19 +1,18 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from django.core.validators import RegexValidator  # Правильный импорт
+from django.core.validators import RegexValidator
 from .models import User
+
 
 class UserRegistrationForm(UserCreationForm):
     email = forms.EmailField(
         required=True,
-        widget=forms.EmailInput(attrs={'class': 'form-control'})
-    )
-
+        widget=forms.EmailInput(attrs={'class': 'form-control'}))
 
     class Meta:
         model = User
-        fields = ['username', 'email',  'password1', 'password2', 'phone', 'last_name',
-                  'first_name', 'patronymic',]
+        fields = ['username', 'email', 'password1', 'password2', 'phone', 'last_name',
+                  'first_name', 'patronymic']
 
 
 class UserAdminChangeForm(UserChangeForm):
@@ -26,20 +25,15 @@ class RoleSelectionForm(forms.ModelForm):
     role = forms.ChoiceField(
         choices=User.UserType.choices,
         widget=forms.RadioSelect(),
-        label='Выберите вашу роль'
+        label='Выберите вашу роль',
+        required=True
     )
 
     class Meta:
         model = User
-        fields = [
-            'role',
-            'last_name',
-            'first_name',
-            'patronymic',
-            'phone',
-            'passport',
-            'avatar'
-        ]
+        fields = ['role']  # Только поле роли
+
+
         labels = {
             'last_name': 'Фамилия',
             'first_name': 'Имя',
@@ -55,11 +49,7 @@ class RoleSelectionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Делаем поля обязательными
-        self.fields['last_name'].required = True
-        self.fields['first_name'].required = True
-        self.fields['phone'].required = True
-        self.fields['passport'].required = True
+
 
 
 class ProfileForm(forms.ModelForm):
@@ -67,20 +57,54 @@ class ProfileForm(forms.ModelForm):
         max_length=18,
         validators=[
             RegexValidator(
-                regex=r'^(\+7|8)\s?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$',
+                regex=r'^\+7\s\(\d{3}\)\s\d{3}-\d{2}-\d{2}$',
                 message="Номер должен быть в формате: +7 (XXX) XXX-XX-XX"
             )
-        ]
+        ],
+        required=True,
+        label='Телефон'
+
+    )
+
+    passport = forms.CharField(
+        max_length=11,
+        validators=[
+            RegexValidator(
+                regex=r'^\d{4}\s\d{6}$',
+                message="Паспорт должен быть в формате: 1234 567890"
+            )
+        ],
+        required=True,
+        label='Паспортные данные'
     )
 
     class Meta:
         model = User
-        fields = ['last_name', 'first_name', 'patronymic', 'phone', 'avatar', 'passport']
-
+        fields = [
+            'last_name',
+            'first_name',
+            'patronymic',
+            'phone',
+            'passport',
+            'avatar'
+        ]
         labels = {
             'last_name': 'Фамилия',
             'first_name': 'Имя',
             'patronymic': 'Отчество',
-            'avatar': 'Фотография',
-            'passport': 'Паспортные данные'
+            'phone': 'Телефон',
+            'passport': 'Паспортные данные',
+            'avatar': 'Фотография профиля'
         }
+        widgets = {
+            'phone': forms.TextInput(attrs={'placeholder': '+7 (999) 999-99-99'}),
+            'passport': forms.TextInput(attrs={'placeholder': '1234 567890'})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Делаем поля обязательными на уровне формы
+        self.fields['last_name'].required = True
+        self.fields['first_name'].required = True
+        self.fields['phone'].required = True
+        self.fields['passport'].required = True

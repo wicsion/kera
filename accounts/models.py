@@ -1,33 +1,20 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.core.validators import RegexValidator
 
 
 class User(AbstractUser):
-    """Кастомная модель пользователя с расширенными полями"""
-    # Оставляем только email как обязательное
     email = models.EmailField(_('email address'), unique=True)
-
-    # Делаем остальные поля необязательными
     phone = models.CharField(_('Phone Number'), max_length=18, blank=True, null=True)
     last_name = models.CharField(_('last name'), max_length=150, blank=True)
     first_name = models.CharField(_('first name'), max_length=150, blank=True)
     patronymic = models.CharField(_('patronymic'), max_length=150, blank=True)
-
-    verification_token = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        verbose_name='Токен верификации'
-    )
-
+    verification_token = models.CharField(max_length=100, blank=True, null=True, verbose_name='Токен верификации')
 
     class UserType(models.TextChoices):
         CLIENT = 'client', _('Client')
         BROKER = 'broker', _('Broker')
         DEVELOPER = 'developer', _('Developer')
-
 
     user_type = models.CharField(
         max_length=10,
@@ -36,23 +23,9 @@ class User(AbstractUser):
         verbose_name=_('User Type')
     )
 
-
-
-    avatar = models.ImageField(
-        upload_to='avatars/',
-        blank=True,
-        null=True,
-        verbose_name=_('Avatar')
-    )
-    is_verified = models.BooleanField(
-        default=False,
-        verbose_name=_('Verified')
-    )
-    passport = models.CharField(
-        _('Passport Data'),
-        max_length=100,
-        blank=True
-    )
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name=_('Avatar'))
+    is_verified = models.BooleanField(default=False, verbose_name=_('Verified'))
+    passport = models.CharField(_('Passport Data'), max_length=100, blank=True)
 
     class Meta:
         verbose_name = _('User')
@@ -75,14 +48,27 @@ class User(AbstractUser):
 
     @property
     def is_profile_complete(self):
-        """Проверка заполненности обязательных полей"""
         return all([
             self.user_type,
-            self.last_name,
-            self.first_name,
-            self.phone,
-            self.passport
+            self.last_name and self.last_name.strip() != '',
+            self.first_name and self.first_name.strip() != '',
+            self.phone and self.phone.strip() != '',
+            self.passport and self.passport.strip() != ''
         ])
+
+class UserActivity(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='activities'
+    )
+    action = models.CharField(max_length=200)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = 'Активность пользователя'
+        verbose_name_plural = 'Активности пользователей'
 
 class Subscription(models.Model):
     user = models.ForeignKey(
@@ -106,16 +92,26 @@ class Subscription(models.Model):
     def __str__(self):
         return f"{self.user} → {self.developer}"
 
-class UserActivity(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='activities'
-    )
-    action = models.CharField(max_length=200)
-    timestamp = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        ordering = ['-timestamp']
-        verbose_name = 'Активность пользователя'
-        verbose_name_plural = 'Активности пользователей'
+
+class Property(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=12, decimal_places=2)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_properties')
+    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    likes = models.ManyToManyField(User, related_name='liked_properties', blank=True)
+
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, null=True, blank=True)
+    broker = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='favorited_brokers')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class ContactRequest(models.Model):
+    requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_requests')
+    broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_requests')
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, null=True)
+    is_paid = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)

@@ -9,7 +9,8 @@ from .views import (
     invalid_token_view,
     login_view,
     logout_view,
-    RoleSelectionView
+    RoleSelectionView,
+    CompleteRegistrationView
 )
 
 
@@ -23,6 +24,5 @@ urlpatterns = [
     path('verify-email/<str:token>/', verify_email, name='verify_email'),
     path('invalid-token/', invalid_token_view, name='invalid_token'),
     path('email-verification-sent/', EmailVerificationSentView.as_view(), name='email_verification_sent'),
-    path('select-role/', RoleSelectionView.as_view(), name='role_selection'),
-
+    path('complete-registration/', CompleteRegistrationView.as_view(), name='complete_registration'),
 ]

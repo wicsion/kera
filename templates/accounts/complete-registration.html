@@ -1,175 +1,263 @@
 {% extends 'base.html' %}
+{% block title %}Завершение регистрации{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Заголовок профиля -->
-    <div class="card border-dark mb-4">
-        <div class="card-body">
-            <div class="d-flex align-items-center">
-                <div class="me-4">
-                    {% if user.avatar %}
-                        <img src="{{ user.avatar.url }}"
-                             class="rounded-circle border border-3"
-                             width="120"
-                             height="120"
-                             alt="Аватар">
-                    {% else %}
-                        <div class="bg-secondary rounded-circle border border-3"
-                             style="width: 120px; height: 120px;"></div>
-                    {% endif %}
+<style>
+    .registration-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .role-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: white;
+    }
+
+    .role-card.selected {
+        border-color: #3b82f6;
+        background-color: #f0f9ff;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    }
+
+    .profile-preview {
+        border: 2px solid #000;
+        border-radius: 15px;
+        padding: 25px;
+        margin-top: 30px;
+        background: #f8fafc;
+    }
+
+    .oval-avatar {
+        border-radius: 50% / 30%;
+        width: 180px;
+        height: 180px;
+        object-fit: cover;
+        border: 2px solid #000;
+        margin: 0 auto 15px;
+    }
+
+    .custom-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        font-size: 16px;
+        transition: all 0.2s ease;
+    }
+
+    .custom-input:focus {
+        border-color: #3b82f6;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .error-message {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+</style>
+
+<div class="registration-container">
+    <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">
+        <i class="bi bi-person-badge mr-2"></i>Завершение регистрации
+    </h1>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Вывод ошибок -->
+        {% if form.errors %}
+        <div class="bg-red-50 p-4 rounded-lg mb-6">
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <p class="text-red-600">✖ {{ error }}</p>
+                {% endfor %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Выбор роли -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <label class="role-card">
+                <input type="radio" name="role" value="client" class="hidden" required>
+                <div class="text-center">
+                    <i class="bi bi-person text-4xl text-blue-600 mb-3"></i>
+                    <h3 class="text-xl font-semibold">Клиент</h3>
+                    <p class="text-gray-600 mt-2">Пользователь платформы</p>
+                </div>
+            </label>
+
+            <label class="role-card">
+                <input type="radio" name="role" value="broker" class="hidden">
+                <div class="text-center">
+                    <i class="bi bi-briefcase text-4xl text-blue-600 mb-3"></i>
+                    <h3 class="text-xl font-semibold">Риелтор</h3>
+                    <p class="text-gray-600 mt-2">Профессиональное управление недвижимостью</p>
+                </div>
+            </label>
+
+            <label class="role-card">
+                <input type="radio" name="role" value="developer" class="hidden">
+                <div class="text-center">
+                    <i class="bi bi-building text-4xl text-blue-600 mb-3"></i>
+                    <h3 class="text-xl font-semibold">Застройщик</h3>
+                    <p class="text-gray-600 mt-2">Управление строительными проектами</p>
+                </div>
+            </label>
+        </div>
+
+        <!-- Личные данные -->
+        <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="text" name="last_name"
+                       class="custom-input"
+                       placeholder="Фамилия"
+                       value="{{ form.last_name.value|default:'' }}"
+                       required>
+                <input type="text" name="first_name"
+                       class="custom-input"
+                       placeholder="Имя"
+                       value="{{ form.first_name.value|default:'' }}"
+                       required>
+                <input type="text" name="patronymic"
+                       class="custom-input"
+                       placeholder="Отчество"
+                       value="{{ form.patronymic.value|default:'' }}">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Телефон</label>
+                <input type="text"
+                       name="phone"
+                       class="custom-input"
+                       placeholder="+7 (999) 999-99-99"
+                       maxlength="17"
+                       oninput="formatPhone(this)"
+                       onkeydown="handlePhoneInput(event)"
+                       value="{{ form.phone.value|default:'' }}"
+                       required>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Паспорт РФ</label>
+                <input type="text"
+                       name="passport"
+                       class="custom-input"
+                       placeholder="Серия и номер: 1234 567890"
+                       maxlength="11"
+                       oninput="formatPassport(this)"
+                       value="{{ form.passport.value|default:'' }}"
+                       required>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Фотография профиля</label>
+                <input type="file"
+                       name="avatar"
+                       class="custom-input"
+                       accept="image/*">
+                <p class="text-sm text-gray-500 mt-1">Поддерживаемые форматы: JPG, PNG, GIF (до 5MB)</p>
+            </div>
+        </div>
+
+        <!-- Предпросмотр профиля -->
+        <div class="profile-preview">
+            <div class="text-center mb-4">
+                {% if user.avatar %}
+                    <img src="{{ user.avatar.url }}"
+                         class="oval-avatar"
+                         alt="Аватар">
+                {% else %}
+                    <div class="oval-avatar bg-secondary"></div>
+                {% endif %}
+                <h3 class="text-xl font-bold mt-2">
+                    {{ form.last_name.value|default:"Фамилия" }}
+                    {{ form.first_name.value|default:"Имя" }}
+                    {{ form.patronymic.value|default:"Отчество" }}
+                </h3>
+                <p class="text-gray-600">
+                    <span id="preview-role">{% if form.role.value %}{{ form.get_role_display }}{% else %}Роль не выбрана{% endif %}</span>
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="font-medium">Контактная информация:</p>
+                    <p id="preview-phone">{{ form.phone.value|default:"+7 (XXX) XXX-XX-XX" }}</p>
+                    <p>{{ user.email }}</p>
                 </div>
                 <div>
-                    <h1 class="mb-1">{{ user.get_full_name }}</h1>
-                    <h4 class="text-muted">{{ user.specialization }}</h4>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Основные секции -->
-    <div class="row g-4">
-        <!-- Левая колонка -->
-        <div class="col-md-6">
-            <!-- Условия работы -->
-            <div class="card border-dark mb-3">
-                <div class="card-header bg-light">
-                    <h4 class="mb-0">Условия работы</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-6">
-                            <p class="mb-1">График работы</p>
-                            <p class="fw-bold">Полный день</p>
-                        </div>
-                        <div class="col-6">
-                            <p class="mb-1">Тип занятости</p>
-                            <p class="fw-bold">Полная занятость</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Контакты -->
-            <div class="card border-dark mb-3">
-                <div class="card-header bg-light">
-                    <h4 class="mb-0">Контакты</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row g-2">
-                        <div class="col-12">
-                            <p class="mb-0">Телефон:</p>
-                            <p class="fw-bold">+7 (XXX) XXX-XX-XX</p>
-                        </div>
-                        <div class="col-12">
-                            <p class="mb-0">Email:</p>
-                            <p class="fw-bold">{{ user.email }}</p>
-                        </div>
-                    </div>
+                    <p class="font-medium">Паспортные данные:</p>
+                    <p id="preview-passport">{{ form.passport.value|default:"XXXX XXXXXX" }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Правая колонка -->
-        <div class="col-md-6">
-            <!-- Объекты недвижимости -->
-            <div class="card border-dark mb-3">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Мои объекты</h4>
-                    <a href="{% url 'property-create' %}" class="btn btn-sm btn-success">
-                        <i class="bi bi-plus-lg"></i> Добавить
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div class="list-group">
-                        {% for prop in properties %}
-                        <a href="{% url 'property-detail' prop.id %}"
-                           class="list-group-item list-group-item-action d-flex justify-content-between">
-                            <span>{{ prop.title }}</span>
-                            <span>{{ prop.price }} ₽</span>
-                        </a>
-                        {% empty %}
-                        <div class="alert alert-info mb-0">Нет активных объектов</div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Отзывы -->
-    <div class="card border-dark mt-3">
-        <div class="card-header bg-light">
-            <h4 class="mb-0">Отзывы клиентов</h4>
-        </div>
-        <div class="card-body">
-            <div class="row g-3">
-                {% for review in reviews %}
-                <div class="col-md-6">
-                    <div class="card border-secondary">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <h5>{{ review.author }}</h5>
-                                <div class="text-warning">
-                                    {% for i in "12345" %}
-                                    {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <p class="mb-0">{{ review.text }}</p>
-                        </div>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="col-12">
-                    <div class="alert alert-info">Отзывов пока нет</div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Подписка -->
-    <div class="card border-dark mt-3">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Премиум доступ</h4>
-            {% if active_subscription %}
-            <span class="badge bg-success">Активна до {{ active_subscription.end_date|date:"d.m.Y" }}</span>
-            {% endif %}
-        </div>
-        <div class="card-body">
-            <div class="d-grid gap-2">
-
-                   class="btn btn-lg btn-primary">
-                    {% if active_subscription %}Продлить подписку{% else %}Активировать премиум{% endif %}
-
-                <button class="btn btn-outline-danger"
-                        data-bs-toggle="modal"
-                        data-bs-target="#archiveModal">
-                    Архивировать профиль
-                </button>
-            </div>
-        </div>
-    </div>
+        <button type="submit"
+                class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+            Завершить регистрацию <i class="bi bi-check2 ml-2"></i>
+        </button>
+    </form>
 </div>
 
+<script>
+    // Форматирование телефона
+    function formatPhone(input) {
+        let numbers = input.value.replace(/\D/g, '');
+        if (numbers.startsWith('7') && numbers.length === 11) {
+            numbers = numbers.substring(1);
+        }
+        let formatted = numbers.replace(/^(\d{3})(\d{3})(\d{2})(\d{2})$/, '+7 ($1) $2-$3-$4');
+        input.value = formatted;
+        document.getElementById('preview-phone').textContent = formatted;
+    }
 
-<!-- Модальное окно архивации -->
-<div class="modal fade" id="archiveModal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Архивация профиля</h5>
-            </div>
-            <div class="modal-body">
-                Ваш профиль будет скрыт из поиска до следующей активации.
-            </div>
-            <div class="modal-footer">
+    // Форматирование паспорта
+    function formatPassport(input) {
+        let numbers = input.value.replace(/\D/g, '');
+        if (numbers.length > 4) {
+            input.value = `${numbers.slice(0,4)} ${numbers.slice(4,10)}`;
+        } else {
+            input.value = numbers;
+        }
+        document.getElementById('preview-passport').textContent = input.value;
+    }
 
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Подтвердить</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+    // Обновление предпросмотра роли
+    document.querySelectorAll('input[name="role"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const roleName = this.closest('.role-card').querySelector('h3').textContent;
+            document.getElementById('preview-role').textContent = roleName;
+
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            this.closest('.role-card').classList.add('selected');
+        });
+    });
+
+    // Обновление превью при изменении полей
+    document.querySelectorAll('input[name="last_name"], input[name="first_name"], input[name="patronymic"]')
+        .forEach(input => {
+            input.addEventListener('input', function() {
+                const fullName = [
+                    document.querySelector('input[name="last_name"]').value,
+                    document.querySelector('input[name="first_name"]').value,
+                    document.querySelector('input[name="patronymic"]').value
+                ].join(' ').trim();
+
+                document.querySelector('.profile-preview h3').textContent =
+                    fullName || "Фамилия Имя Отчество";
+            });
+        });
+</script>
 {% endblock %}

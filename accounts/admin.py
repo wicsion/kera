@@ -26,3 +26,4 @@ class CustomUserAdmin(UserAdmin):
     ordering = ('-date_joined',)
 
 admin.site.register(User, CustomUserAdmin)
+
