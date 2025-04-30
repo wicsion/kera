@@ -9,8 +9,11 @@ from .views import (
     invalid_token_view,
     login_view,
     logout_view,
-    RoleSelectionView,
-    CompleteRegistrationView
+    CompleteRegistrationView,
+    PropertyCreateView,
+    ToggleFavoriteView,
+    ContactRequestView
+
 )
 
 
@@ -25,4 +28,8 @@ urlpatterns = [
     path('invalid-token/', invalid_token_view, name='invalid_token'),
     path('email-verification-sent/', EmailVerificationSentView.as_view(), name='email_verification_sent'),
     path('complete-registration/', CompleteRegistrationView.as_view(), name='complete_registration'),
+    path('property/create/', PropertyCreateView.as_view(), name='create_property'),
+    path('toggle-favorite/', ToggleFavoriteView.as_view(), name='toggle_favorite'),
+    path('contact/<int:broker_id>/', ContactRequestView.as_view(), name='contact_request'),
 ]
+

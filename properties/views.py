@@ -18,7 +18,10 @@ class PropertyListView(FilterView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.filter(is_approved=True, status='active')
+        return queryset.filter(
+            is_approved=True,
+            status='active'
+        ).select_related('property_type', 'broker', 'developer')
 
 
 class PropertyDetailView(DetailView):
@@ -44,6 +47,7 @@ class PropertyCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user
+        form.instance.status = 'active'
         if self.request.user.user_type == 'broker':
             form.instance.broker = self.request.user
         elif self.request.user.user_type == 'developer':

@@ -101,17 +101,17 @@ class Property(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_properties')
     is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    likes = models.ManyToManyField(User, related_name='liked_properties', blank=True)
+    likes = models.ManyToManyField(User, related_name='property_likes', blank=True)
 
 class Favorite(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
-    property = models.ForeignKey(Property, on_delete=models.CASCADE, null=True, blank=True)
-    broker = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='favorited_brokers')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='account_favorites' )
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, null=True, blank=True, related_name='property_favorites' )
+    broker = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='broker_favorites')
     created_at = models.DateTimeField(auto_now_add=True)
 
 class ContactRequest(models.Model):
     requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_requests')
     broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_requests')
-    property = models.ForeignKey(Property, on_delete=models.CASCADE, null=True)
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, null=True, related_name='contact_requests' )
     is_paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,5 +1,8 @@
 from django.shortcuts import redirect
-from .models import UserActivity
+from django.contrib import messages
+
+from .models import UserActivity, Property
+
 
 class ActivityLoggerMiddleware:
     def __init__(self, get_response):
@@ -13,6 +16,7 @@ class ActivityLoggerMiddleware:
                 action=f"Посещение страницы: {request.path}"
             )
         return response
+
 
 class ProfileCompletionMiddleware:
     def __init__(self, get_response):
@@ -41,4 +45,21 @@ class ProfileCompletionMiddleware:
                 if request.path not in excluded_paths:
                     return redirect('complete_registration')
 
+        return self.get_response(request)
+
+
+class DeveloperModerationMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if (request.user.is_authenticated
+            and request.user.is_developer
+            and not request.path.startswith('/admin/')):
+            unapproved_count = Property.objects.filter(
+                creator=request.user,
+                is_approved=False
+            ).count()
+            if unapproved_count > 0:
+                messages.info(request, f"У вас {unapproved_count} объектов на модерации")
         return self.get_response(request)

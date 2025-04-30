@@ -147,16 +147,26 @@ def dashboard_view(request):
     context = {}
     user = request.user
 
+    # Общие данные
+    context.update({
+        'favorites': user.favorites.all(),
+        'contact_requests': user.received_requests.all() if user.is_broker else [],
+        'activities': UserActivity.objects.filter(user=user).order_by('-timestamp')[:10]
+    })
+
+    # Данные по ролям
     if user.user_type == User.UserType.BROKER:
         context.update({
-            'properties': user.broker_properties.all()[:5],
-            'subscriptions': user.subscriptions.filter(is_active=True),
-            'activities': UserActivity.objects.filter(user=user).order_by('-timestamp')[:10]
+            'my_properties': user.created_properties.all(),
+            'subscriptions': user.subscriptions.filter(is_active=True)
         })
     elif user.user_type == User.UserType.DEVELOPER:
-        context['developer_properties'] = user.developer_properties.all()[:5]
+        context['developer_properties'] = user.created_properties.filter(is_approved=True)
     elif user.user_type == User.UserType.CLIENT:
-        context['favorite_properties'] = user.favorites.all()[:5]
+        context.update({
+            'favorite_properties': user.account_favorites.filter(property__isnull=False),
+            'favorite_brokers': user.broker_favorites.all()
+        })
 
     return render(request, 'accounts/dashboard.html', context)
 
@@ -195,7 +205,7 @@ def verify_email(request, token):
 class PropertyCreateView(LoginRequiredMixin, CreateView):
     model = Property
     fields = ['title', 'description', 'price']
-    template_name = 'property_create.html'
+    template_name = 'accounts/property_create.html'
     success_url = reverse_lazy('dashboard')
 
     def form_valid(self, form):

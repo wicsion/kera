@@ -13,7 +13,11 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-ваш-резерв
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = [
+    '192.168.50.98',  # Ваш локальный IP
+    'localhost',       # Для доступа через localhost
+    '127.0.0.1',       # Стандартный локальный адрес
+]
 
 # Настройки приложений
 INSTALLED_APPS = [
@@ -123,6 +127,17 @@ EMAIL_USE_SSL = True           # Обязательно для порта 465
 EMAIL_HOST_USER = 'goldinpav@yandex.ru'  # Полный email
 EMAIL_HOST_PASSWORD = 'mglkpkdkfapyubfa'  # Создан в аккаунте Яндекса
 DEFAULT_FROM_EMAIL = 'RealEstatePro <goldinpav@yandex.ru>'
+
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+class OwnerAdminMixin:
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(creator=request.user)
 
 # Дополнительные настройки для production
 if not DEBUG:

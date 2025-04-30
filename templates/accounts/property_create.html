@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<style>
+    .creation-form {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+        border-bottom: 3px solid #3b82f6;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .custom-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        font-size: 16px;
+        transition: all 0.2s ease;
+    }
+
+    .custom-input:focus {
+        border-color: #3b82f6;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .submit-btn {
+        background: #3b82f6;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+
+    .submit-btn:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #34495e;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+</style>
+
+<div class="creation-form">
+    <h1 class="form-title text-center mb-5">🏠 Добавить новый объект</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="mb-4">
+            <label class="form-label">Название объекта</label>
+            {% render_field form.title class+="custom-input w-100" %}
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label">Описание</label>
+            {% render_field form.description class+="custom-input w-100" rows="4" %}
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <label class="form-label">Цена (₽)</label>
+                {% render_field form.price class+="custom-input w-100" %}
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Основное фото</label>
+                <input type="file" name="main_image" class="custom-input">
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <button type="submit" class="submit-btn">
+                <i class="bi bi-house-add me-2"></i>Опубликовать
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
