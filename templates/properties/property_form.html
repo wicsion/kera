@@ -1,14 +1,89 @@
 {% extends 'base.html' %}
-{% block title %}{{ form.instance.pk|yesno:"Редактировать,Создать" }} объект - RealEstatePro{% endblock %}
+
+{% block title %}{{ form.instance.pk|yesno:"Редактировать,Создать" }} объект | RealEstatePro{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">{{ form.instance.pk|yesno:"Редактировать,Создать" }} объект недвижимости</h1>
+<div class="registration-container">
+    <div class="bg-white rounded-xl shadow-sm p-8 border-2 border-gray-100">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">
+            <i class="bi bi-house-door"></i>
+            {{ form.instance.pk|yesno:"Редактировать,Создать" }} объект
+        </h1>
 
-<form method="post" enctype="multipart/form-data" class="bg-white p-6 rounded shadow-md space-y-4">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
-        Сохранить
-    </button>
-</form>
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Левая колонка -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Название</label>
+                        {{ form.title }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Описание</label>
+                        {{ form.description }}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Основное фото</label>
+                        {{ form.main_image }}
+                    </div>
+                </div>
+
+                <!-- Правая колонка -->
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Цена (₽)</label>
+                            {{ form.price }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Площадь (м²)</label>
+                            {{ form.area }}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Комнат</label>
+                            {{ form.rooms }}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Тип</label>
+                            {{ form.property_type }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Адрес</label>
+                        {{ form.location }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t pt-6">
+                <div class="flex gap-4">
+                    <button type="submit" class="btn-primary flex items-center gap-2">
+                        <i class="bi bi-save"></i> Сохранить
+                    </button>
+                    <a href="{% url 'property-list' %}" class="btn-outline">
+                        <i class="bi bi-x-lg"></i> Отмена
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    input, select, textarea {
+        @apply w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    }
+    .btn-primary {
+        @apply bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors;
+    }
+    .btn-outline {
+        @apply border-2 border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors;
+    }
+</style>
 {% endblock %}

@@ -1,5 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.mail import send_mail
+from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views import View
@@ -7,7 +8,7 @@ from django.views import View
 from .models import Payment
 import requests  # Для API платежных систем
 
-from ..accounts.models import ContactRequest
+from ..accounts.models import ContactRequest, PropertyListing
 from ..real_estate_portal import settings
 
 
@@ -43,7 +44,7 @@ def process_payment(request):
 def payment_callback(request):
     payment = Payment.objects.get(transaction_id=request.GET.get('payment_id'))
 
-    if payment.status == 'completed':
+    if payment.status == 'completed' :
         try:
             subscription = payment.brokersubscription
             subscription.status = 'active'
@@ -78,3 +79,31 @@ class CreatePaymentView(LoginRequiredMixin, View):
         contact_request.save()
 
         return redirect('contact-details', pk=contact_request.pk)
+
+
+@login_required
+def process_listing_payment(request, pk):
+    listing = get_object_or_404(PropertyListing, pk=pk)
+
+    # Проверка что пользователь - владелец размещения
+    if request.user != listing.broker:
+        return HttpResponseForbidden()
+
+    # Расчет стоимости
+    amount = 2490 if listing.is_featured else 990
+
+    # Создание платежа
+    payment = Payment.objects.create(
+        user=request.user,
+        amount=amount,
+        payment_method='card',
+        status='pending'
+    )
+
+    # Привязка платежа к размещению
+    listing.payment = payment
+    listing.save()
+
+    # Интеграция с платежным шлюзом
+    # ... ваш код интеграции ...
+

@@ -2,130 +2,164 @@
 
 {% block content %}
 <style>
+    :root {
+        --primary-blue: #3b82f6;
+        --gradient-blue: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+    }
+
     .dashboard-section {
         border: 2px solid #e0e0e0;
-        border-radius: 12px;
+        border-radius: 16px;
         margin: 0 auto;
         padding: 25px;
         background: #fff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         max-width: 800px;
+        transition: transform 0.3s ease;
+    }
+
+    .dashboard-section:hover {
+        transform: translateY(-3px);
     }
 
     .section-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #2c3e50;
-        border-bottom: 2px solid #3b82f6;
-        padding-bottom: 10px;
-        margin-bottom: 25px;
+        font-size: 1.6rem;
+        font-weight: 800;
+        background-image: var(--gradient-blue);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        padding-bottom: 12px;
+        margin-bottom: 28px;
+        position: relative;
+    }
+
+    .section-title::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: var(--gradient-blue);
+        border-radius: 2px;
     }
 
     .btn-custom {
-        border: 2px solid #3b82f6;
-        border-radius: 25px;
-        padding: 8px 30px;
+        background: rgba(59, 130, 246, 0.1);
+        border: none;
+        border-radius: 12px;
+        padding: 10px 32px;
         font-weight: 600;
-        color: #3b82f6;
-        transition: all 0.3s ease;
+        color: var(--primary-blue);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        min-width: 120px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
     }
 
     .btn-custom:hover,
     .btn-custom.active {
-        background: #3b82f6;
+        background: var(--gradient-blue);
         color: white !important;
+        box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
     }
 
     .profile-card {
         border: 2px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 12px 15px;
-        margin-bottom: 12px;
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 16px;
         background: #fff;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        max-width: 100%;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+        animation: cardEnter 0.4s ease;
     }
 
-    /* ОБНОВЛЕННЫЕ СТИЛИ АВАТАРА */
+    @keyframes cardEnter {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
     .dashboard-avatar {
-        width: 12rem;
-        height: 12rem;
+        width: 10rem;
+        height: 10rem;
         border-radius: 50%;
         object-fit: cover;
-        border: 2px solid #bfdbfe;
-        margin: 0 auto 1rem;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border: 3px solid #bfdbfe;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        display: block; /* Добавлено для img */
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .dashboard-avatar:hover {
+        transform: scale(1.05);
     }
 
     .avatar-placeholder {
         width: 8rem;
         height: 8rem;
-        border-radius: 60%;
-        background-color: #eff6ff;
-        display: flex;
+        background: var(--gradient-blue);
+        display: flex !important; /* Переопределение */
         align-items: center;
         justify-content: center;
-        border: 2px solid #bfdbfe;
-        margin: 0 auto 1rem;
+        border-radius: 50%;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .profile-detail {
-        border-bottom: 2px solid #93c5fd;
-        padding: 15px 0;
+        padding: 16px 0;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-bottom: 2px dashed #e5e7eb;
     }
 
-    .text-center.mb-4 h2 {
-        font-size: 2.1rem;
-        margin-bottom: 1rem !important;
+    .profile-detail span {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #64748b;
     }
 
-    .message-out { margin-left: 20%; margin-right: 2%; }
-    .message-in { margin-right: 20%; margin-left: 2%; }
-    .chat-messages {
-        background-color: #f8f9fa;
-        border-radius: 0.375rem;
-        padding: 1rem;
+    .badge-status {
+        position: relative;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .badge-new {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b !important;
+    }
+
+    .badge-new::after {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: #f59e0b;
+        border-radius: 50%;
+        margin-left: 8px;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.8; }
     }
 
     @media (max-width: 768px) {
-        .profile-card {
-            padding: 10px 12px;
-            margin-bottom: 10px;
-        }
+        .dashboard-avatar { width: 8rem; height: 8rem; }
+        .btn-custom { width: 100%; justify-content: center; }
+        .message-out, .message-in { margin: 0 5% !important; }
+        .section-title { font-size: 1.4rem; }
     }
-
-     .text-center.mb-4 h2 {
-        font-weight: 900;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-        letter-spacing: -0.5px;
-        font-size: 2.1rem;
-        margin-bottom: 1rem !important;
-    }
-
-    .text-center.mb-4 .badge {
-        border: 2px solid #3b82f6 !important;
-        padding: 8px 25px;
-        border-radius: 25px;
-        font-weight: 700;
-        font-size: 1.1rem;
-        display: inline-block;
-        margin-top: 0.5rem;
-        background: transparent !important; /* Для акцента на обводке */
-    }
-     /* Стиль для роли пользователя */
-    .user-role-badge {
-        border: 2px solid #3b82f6 !important;
-        color: #3b82f6 !important; /* Голубой цвет текста */
-        background: transparent !important;
-    }
-
-    /* Цвета статусов */
-    .badge-new { border-color: #f59e0b; color: #f59e0b; }
-    .badge-in-progress { border-color: #3b82f6; color: #3b82f6; }
-    .badge-completed { border-color: #10b981; color: #10b981; }
 </style>
 
 <div class="container py-4">
@@ -140,7 +174,7 @@
                              alt="Аватар">
                     {% else %}
                         <div class="avatar-placeholder">
-                            <i class="bi bi-person-circle text-4xl text-blue-400"></i>
+                            <i class="bi bi-person-fill text-white" style="font-size: 3rem;"></i>
                         </div>
                     {% endif %}
                 </div>
@@ -148,53 +182,67 @@
                 <div class="text-center mb-4">
                     <h2 class="mb-2 fw-bold">{{ user.get_full_name }}</h2>
                     <div class="mb-3">
-    {% if user.user_type == 'broker' %}
-        <span class="badge user-role-badge">Лицензированный риелтор</span>
-    {% elif user.user_type == 'developer' %}
-        <span class="badge user-role-badge">Застройщик</span>
-    {% else %}
-        <span class="badge user-role-badge">Клиент</span>
-    {% endif %}
-</div>
+                        {% if user.user_type == 'broker' %}
+                            <span class="badge badge-status bg-blue-100 text-blue-800">
+                                📜 Лицензированный риелтор
+                            </span>
+                        {% elif user.user_type == 'developer' %}
+                            <span class="badge badge-status bg-purple-100 text-purple-800">
+                                🏗️ Застройщик
+                            </span>
+                        {% else %}
+                            <span class="badge badge-status bg-green-100 text-green-800">
+                                🤝 Клиент
+                            </span>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <div class="profile-details">
                     <div class="profile-detail">
-                        <span>Телефон:</span>
-                        <strong>{{ user.phone|default:"не указан" }}</strong>
+                        <span>📱 Телефон:</span>
+                        <strong>{{ user.phone|default:"—" }}</strong>
                     </div>
                     <div class="profile-detail">
-                        <span>Email:</span>
+                        <span>📧 Email:</span>
                         <strong>{{ user.email }}</strong>
                     </div>
                     {% if user.passport %}
                     <div class="profile-detail">
-                        <span>Паспорт:</span>
+                        <span>🆔 Паспорт:</span>
                         <strong>{{ user.passport }}</strong>
                     </div>
                     {% endif %}
                 </div>
 
                 <div class="text-center mt-4">
-                    <a href="{% url 'profile-update' %}" class="btn btn-custom">
-                        <i class="bi bi-pencil-square"></i> Редактировать
+                    <a href="{% url 'profile-update' %}"
+                       class="btn btn-custom active">
+                        ✏️ Редактировать профиль
                     </a>
                 </div>
             </div>
 
             {% if user.user_type == 'broker' %}
                 <div class="dashboard-section mt-4">
-                    <h5 class="section-title">Отзывы клиентов</h5>
+                    <h5 class="section-title">⭐ Отзывы клиентов</h5>
                     {% for review in user.reviews.all %}
                         <div class="profile-card">
                             <div class="d-flex justify-content-between mb-2">
-                                <strong>{{ review.client.get_full_name }}</strong>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="{{ review.client.avatar.url }}"
+                                         class="rounded-circle"
+                                         width="40"
+                                         height="40"
+                                         alt="Аватар">
+                                    <strong>{{ review.client.get_full_name }}</strong>
+                                </div>
                                 <span class="text-warning">★ {{ review.rating }}/5</span>
                             </div>
                             <p class="mb-0">{{ review.comment }}</p>
                         </div>
                     {% empty %}
-                        <div class="alert alert-info">Нет отзывов</div>
+                        <div class="alert alert-info">📭 Нет отзывов</div>
                     {% endfor %}
                 </div>
             {% endif %}
@@ -206,12 +254,16 @@
                 <!-- Избранное -->
                 <div class="dashboard-section">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h3 class="section-title mb-0">🌟 Избранное</h3>
+                        <h3 class="section-title">🌟 Избранное</h3>
                         <div class="btn-group">
                             <a class="btn btn-custom {% if active_tab == 'properties' %}active{% endif %}"
-                               href="{% url 'dashboard' %}?tab=properties">Объекты</a>
+                               href="{% url 'dashboard' %}?tab=properties">
+                               🏠 Объекты
+                            </a>
                             <a class="btn btn-custom {% if active_tab == 'brokers' %}active{% endif %}"
-                               href="{% url 'dashboard' %}?tab=brokers">Риелторы</a>
+                               href="{% url 'dashboard' %}?tab=brokers">
+                               🤵 Риелторы
+                            </a>
                         </div>
                     </div>
 
@@ -220,18 +272,18 @@
                         <div class="profile-card">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5>{{ fav.property.title }}</h5>
-                                    <small class="text-muted">Добавлено: {{ fav.created_at|date:"d.m.Y" }}</small>
+                                    <h5>🏘️ {{ fav.property.title }}</h5>
+                                    <small class="text-muted">📅 Добавлено: {{ fav.created_at|date:"d.m.Y" }}</small>
                                 </div>
                                 <button class="btn btn-danger btn-sm unlike-btn"
                                         data-type="property"
                                         data-id="{{ fav.property.id }}">
-                                    <i class="bi bi-trash"></i>
+                                    🗑️ Удалить
                                 </button>
                             </div>
                         </div>
                         {% empty %}
-                        <div class="alert alert-info">Нет избранных объектов</div>
+                        <div class="alert alert-info">📭 Нет избранных объектов</div>
                         {% endfor %}
                     {% else %}
                         {% for fav in broker_favorites %}
@@ -239,74 +291,71 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h5>
-                                        <a href="{% url 'broker_profile' pk=fav.broker.id %}">
-                                            {{ fav.broker.get_full_name }}
+                                        <a href="{% url 'broker_profile' pk=fav.broker.id %}" class="text-decoration-none">
+                                            👤 {{ fav.broker.get_full_name }}
                                         </a>
                                     </h5>
-                                    <small class="text-muted">Рейтинг: ★★★★☆</small>
+                                    <small class="text-muted">⭐ Рейтинг: ★★★★☆</small>
                                 </div>
                                 <div class="d-flex gap-2">
                                     <form method="POST" action="{% url 'contact_broker' pk=fav.broker.id %}">
                                         {% csrf_token %}
                                         <select name="property" class="form-select form-select-sm me-2">
-                                            <option value="">Выберите объект</option>
+                                            <option value="">🏢 Выберите объект</option>
                                             {% for property in fav.broker.created_properties.all %}
                                                 <option value="{{ property.id }}">{{ property.title }}</option>
                                             {% endfor %}
                                         </select>
                                         <button type="submit" class="btn btn-success btn-sm">
-                                            <i class="bi bi-envelope"></i> Запрос
+                                            📩 Запрос
                                         </button>
                                     </form>
                                     <button class="btn btn-danger btn-sm unlike-btn"
                                             data-type="broker"
                                             data-id="{{ fav.broker.id }}">
-                                        <i class="bi bi-trash"></i>
+                                        🗑️ Удалить
                                     </button>
                                 </div>
                             </div>
                         </div>
                         {% empty %}
-                        <div class="alert alert-info">Нет избранных риелторов</div>
+                        <div class="alert alert-info">📭 Нет избранных риелторов</div>
                         {% endfor %}
                     {% endif %}
                 </div>
 
-               <!-- Мои запросы -->
+                <!-- Мои запросы -->
                 <div class="dashboard-section mt-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h3 class="section-title mb-0">📨 Мои запросы</h3>
+                        <h3 class="section-title">📨 Мои запросы</h3>
                         <a href="{% url 'new_contact_request' %}" class="btn btn-custom">
-                            <i class="bi bi-plus-circle"></i> Создать запрос
+                            ➕ Создать запрос
                         </a>
                     </div>
 
                     {% if request.user.accounts_sent_requests.all %}
                         <div class="mb-4">
-                            <h5 class="text-muted mb-3">Активные запросы:</h5>
+                            <h5 class="text-muted mb-3">🔥 Активные запросы:</h5>
                             {% for req in request.user.accounts_sent_requests.all %}
                             <div class="profile-card">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h5>
-                                            <a href="{% url 'contact_request_detail' pk=req.pk %}">
-                                                Запрос к {{ req.broker.get_full_name }}
+                                            <a href="{% url 'contact_request_detail' pk=req.pk %}" class="text-decoration-none">
+                                                📮 {{ req.broker.get_full_name }}
                                             </a>
                                         </h5>
-                                        <small class="text-muted">{{ req.created_at|date:"d.m.Y H:i" }}</small>
-                                        <span class="badge badge-status
-    {% if req.status == 'new' %}badge-new
-    {% elif req.status == 'in_progress' %}badge-in-progress
-    {% else %}badge-completed{% endif %}">
-    {{ req.get_status_display }}
-</span>
+                                        <small class="text-muted">📅 {{ req.created_at|date:"d.m.Y H:i" }}</small>
+                                        <span class="badge badge-status {% if req.status == 'new' %}badge-new{% elif req.status == 'in_progress' %}badge-in-progress{% else %}badge-completed{% endif %}">
+                                            {{ req.get_status_display }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="alert alert-info mb-4">У вас нет активных запросов</div>
+                        <div class="alert alert-info mb-4">📭 У вас нет активных запросов</div>
                     {% endif %}
                 </div>
 
@@ -314,9 +363,9 @@
                 <!-- Мои объекты -->
                 <div class="dashboard-section">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h3 class="section-title mb-0">🏠 Мои объекты</h3>
+                        <h3 class="section-title">🏠 Мои объекты</h3>
                         <a href="{% url 'create_property' %}" class="btn btn-custom">
-                            <i class="bi bi-plus-circle"></i> Добавить
+                            ➕ Добавить
                         </a>
                     </div>
 
@@ -324,48 +373,90 @@
                         <div class="profile-card">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h5>{{ prop.title }}</h5>
+                                    <h5>🏢 {{ prop.title }}</h5>
                                     <p class="text-muted small">{{ prop.description|truncatechars:100 }}</p>
                                 </div>
                                 <span class="badge bg-{{ prop.is_approved|yesno:'success,secondary' }}">
-                                    {{ prop.is_approved|yesno:"Одобрен,На модерации" }}
+                                    {{ prop.is_approved|yesno:"✅ Одобрен,⏳ На модерации" }}
                                 </span>
                             </div>
                         </div>
                     {% empty %}
-                        <div class="alert alert-info">Нет объектов</div>
+                        <div class="alert alert-info">📭 Нет объектов</div>
                     {% endfor %}
                 </div>
-                 <!-- Эксклюзивные объекты -->
+
+                <!-- Платное размещение -->
+                <div class="dashboard-section mt-4">
+                    <h3 class="section-title">💰 Платное размещение</h3>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h5>🔥 Активные</h5>
+                                    {% for listing in active_listings %}
+                                        <div class="profile-card">
+                                            <h6>🏘️ {{ listing.property.title }}</h6>
+                                            <p class="small">
+                                                📆 Дней осталось: {{ listing.days_remaining }}
+                                                {% if listing.is_featured %}<span class="badge bg-warning ms-2">🌟 VIP</span>{% endif %}
+                                            </p>
+                                        </div>
+                                    {% empty %}
+                                        <div class="alert alert-info">📭 Нет активных размещений</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h5>🚀 Новое размещение</h5>
+                                    <a href="{% url 'create_listing' %}" class="btn btn-custom mb-3 w-100">
+                                        ➕ Добавить объект
+                                    </a>
+                                    <p class="small text-muted">
+                                        💸 Стоимость:
+                                        <br>• Обычное - 990₽/мес
+                                        <br>• VIP - 2490₽/мес
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Эксклюзивные объекты -->
                 <div class="dashboard-section mt-4">
                     <h3 class="section-title">💎 Эксклюзивные объекты</h3>
                     <a href="{% url 'exclusive_properties' %}" class="btn btn-custom mb-3">
-                        Посмотреть эксклюзивные объекты
+                        🔍 Посмотреть
                     </a>
                     <div class="row">
                         {% for sub in active_subscriptions %}
                             <div class="col-md-6 mb-3">
                                 <div class="profile-card">
-                                    <h5>{{ sub.developer.company }}</h5>
+                                    <h5>🏢 {{ sub.developer.company }}</h5>
                                     <p class="small text-muted">
-                                        Подписка активна до: {{ sub.end_date|date:"d.m.Y" }}
+                                        📅 Подписка до: {{ sub.end_date|date:"d.m.Y" }}
                                     </p>
                                     <a href="{% url 'subscribe' sub.developer.id %}"
-                                       class="btn btn-sm btn-outline-primary">
-                                        Продлить
+                                       class="btn btn-sm btn-custom">
+                                        🔄 Продлить
                                     </a>
                                 </div>
                             </div>
                         {% empty %}
                             <div class="alert alert-info">
-                                У вас нет активных подписок.
-                                <a href="{% url 'developers_list' %}">Найти застройщиков</a>
+                                📭 Нет подписок.
+                                <a href="{% url 'developers_list' %}" class="text-decoration-none">🔎 Найти застройщиков</a>
                             </div>
                         {% endfor %}
                     </div>
                 </div>
 
-                <!-- Новые запросы -->
+                <!-- Запросы -->
                 <div class="dashboard-section mt-4">
                     <h3 class="section-title">🆕 Новые запросы</h3>
                     {% for req in contact_requests %}
@@ -373,57 +464,20 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h5>
-                                    <a href="{% url 'contact_request_detail' pk=req.pk %}">
-                                        {{ req.requester.get_full_name }}
+                                    <a href="{% url 'contact_request_detail' pk=req.pk %}" class="text-decoration-none">
+                                        👤 {{ req.requester.get_full_name }}
                                     </a>
                                 </h5>
-                                <small class="text-muted">{{ req.created_at|date:"d.m.Y H:i" }}</small>
+                                <small class="text-muted">📅 {{ req.created_at|date:"d.m.Y H:i" }}</small>
                                 {% if req.property %}
-                                <p class="mb-0 small">Объект: {{ req.property.title }}</p>
+                                <p class="mb-0 small">🏠 Объект: {{ req.property.title }}</p>
                                 {% endif %}
                             </div>
-                            <span class="badge badge-status badge-new">Новый</span>
+                            <span class="badge badge-status badge-new">🆕 Новый</span>
                         </div>
                     </div>
                     {% empty %}
-                    <div class="alert alert-info">Нет новых запросов</div>
-                    {% endfor %}
-                </div>
-
-                <!-- Активные запросы -->
-                <div class="dashboard-section mt-4">
-                    <h3 class="section-title">📨 Активные запросы</h3>
-                    {% for req in active_requests %}
-                    <div class="profile-card">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5>
-                                    <a href="{% url 'contact_request_detail' pk=req.pk %}">
-                                        {{ req.requester.get_full_name }}
-                                    </a>
-                                </h5>
-                                <small class="text-muted">Последнее сообщение: {{ req.messages.last.created_at|date:"d.m.Y H:i" }}</small>
-                            </div>
-                            <span class="badge badge-status badge-new">{{ req.get_status_display }}</span>
-                            <span class="badge badge-status badge-in-progress">В работе</span>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="alert alert-info">Нет активных запросов</div>
-                    {% endfor %}
-                </div>
-
-            {% elif user.user_type == 'developer' %}
-                <!-- Проекты застройщика -->
-                <div class="dashboard-section">
-                    <h3 class="section-title">🏗️ Мои проекты</h3>
-                    {% for project in developer_projects %}
-                        <div class="profile-card">
-                            <h5>{{ project.title }}</h5>
-                            <p class="text-muted">{{ project.address }}</p>
-                        </div>
-                    {% empty %}
-                        <div class="alert alert-info">Нет проектов</div>
+                    <div class="alert alert-info">📭 Нет новых запросов</div>
                     {% endfor %}
                 </div>
             {% endif %}
@@ -432,11 +486,10 @@
 </div>
 
 <script>
-    // Существующий JavaScript для избранного
     document.querySelectorAll('.unlike-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            const type = this.dataset.type;
-            const id = this.dataset.id;
+            const originalHTML = this.innerHTML;
+            this.innerHTML = '<div class="spinner-border spinner-border-sm"></div>';
 
             fetch("{% url 'toggle_favorite' %}", {
                 method: 'POST',
@@ -444,8 +497,20 @@
                     'X-CSRFToken': '{{ csrf_token }}',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ type, id })
-            }).then(() => window.location.reload());
+                body: JSON.stringify({
+                    type: this.dataset.type,
+                    id: this.dataset.id
+                })
+            }).then(response => {
+                if (response.ok) {
+                    this.closest('.profile-card').style.opacity = '0';
+                    setTimeout(() => this.closest('.profile-card').remove(), 300);
+                } else {
+                    this.innerHTML = originalHTML;
+                }
+            }).catch(() => {
+                this.innerHTML = originalHTML;
+            });
         });
     });
 </script>

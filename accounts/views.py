@@ -12,6 +12,7 @@ from django.core.mail import EmailMultiAlternatives, send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.views.generic import CreateView
+from django.views.generic import DeleteView
 import random
 import string
 
@@ -19,14 +20,14 @@ import string
 from rest_framework.exceptions import PermissionDenied
 
 from .models import (User, UserActivity,
-                     Subscription ,
+                     Subscription,
                      Property,
                      Favorite,
                      ContactRequest,
                      Message,
                      DeveloperProfile,
                      BrokerSubscription,
-                     ExclusiveProperty)
+                     ExclusiveProperty, PropertyListing)
 from .forms import UserRegistrationForm, RoleSelectionForm, ProfileForm, ContactRequestForm
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
@@ -186,6 +187,12 @@ def dashboard_view(request):
             context['favorite_properties'] = user.account_favorites.filter(property__isnull=False)
         else:
             context['broker_favorites'] = user.broker_favorites.all()
+
+    if user.is_broker:
+        context.update({
+            'active_listings': user.listings.filter(is_active=True),
+            'expired_listings': user.listings.filter(is_active=False)
+        })
 
     return render(request, 'accounts/dashboard.html', context)
 
@@ -417,3 +424,37 @@ class DevelopersListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return DeveloperProfile.objects.filter(is_verified=True)
+
+
+class SubscriptionManagementView(LoginRequiredMixin, View):
+    template_name = 'accounts/subscription_management.html'
+
+    def get(self, request):
+        subscriptions = request.user.broker_subscriptions.all()
+        return render(request, self.template_name, {'subscriptions': subscriptions})
+
+
+class ListingCreateView(LoginRequiredMixin, CreateView):
+    model = PropertyListing
+    fields = ['property', 'end_date', 'is_featured']
+    template_name = 'accounts/create_listing.html'
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Фильтруем только объекты текущего пользователя
+        form.fields['property'].queryset = Property.objects.filter(creator=self.request.user)
+        return form
+
+    def form_valid(self, form):
+        form.instance.broker = self.request.user
+        # Автоматическая установка is_active
+        form.instance.is_active = True if form.instance.end_date > timezone.now() else False
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('process_listing_payment', kwargs={'pk': self.object.pk})
+
+
+class SubscriptionDeleteView(LoginRequiredMixin, DeleteView):
+    model = BrokerSubscription
+    success_url = reverse_lazy('subscription_management')

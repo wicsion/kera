@@ -19,6 +19,9 @@ from .views import (
     ContactRequestDetailView,
     MessageCreateView,
     UpdateRequestStatusView,
+    SubscriptionManagementView,
+    SubscriptionDeleteView,
+    ListingCreateView,
 
 )
 
@@ -45,4 +48,7 @@ urlpatterns = [
     path('subscribe/<int:developer_id>/', views.SubscribeView.as_view(), name='subscribe'),
     path('exclusive-properties/', views.ExclusivePropertiesView.as_view(), name='exclusive_properties'),
     path('developers/', views.DevelopersListView.as_view(), name='developers_list'),
+    path('subscriptions/manage/', SubscriptionManagementView.as_view(), name='subscription_management'),
+    path('listing/create/', ListingCreateView.as_view(), name='create_listing'),
+    path('subscription/delete/<int:pk>/', SubscriptionDeleteView.as_view(), name='delete_subscription'),
 ]

@@ -1,5 +1,6 @@
 from django.utils import timezone
-from accounts.models import BrokerSubscription
+from .models import BrokerSubscription
+from payments.models import Payment
 
 
 def subscriptions(request):
@@ -10,5 +11,15 @@ def subscriptions(request):
                 status='active',
                 end_date__gte=timezone.now()
             ).select_related('developer')
+        }
+    return {}
+
+def payment_info(request):
+    if request.user.is_authenticated and request.user.is_broker:
+        return {
+            'pending_payments': Payment.objects.filter(
+                user=request.user,
+                status='pending'
+            )
         }
     return {}
