@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.mail import send_mail
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views import View
@@ -7,6 +8,7 @@ from .models import Payment
 import requests  # Для API платежных систем
 
 from ..accounts.models import ContactRequest
+from ..real_estate_portal import settings
 
 
 @login_required
@@ -39,19 +41,23 @@ def process_payment(request):
 
 
 def payment_callback(request):
-    payment_id = request.GET.get('payment_id')
-    payment = Payment.objects.get(transaction_id=payment_id)
+    payment = Payment.objects.get(transaction_id=request.GET.get('payment_id'))
 
-    # Проверяем статус в платежной системе
-    response = requests.get(
-        f'https://api.yookassa.ru/v3/payments/{payment_id}',
-        auth=('shop_id', 'secret_key')
-    )
+    if payment.status == 'completed':
+        try:
+            subscription = payment.brokersubscription
+            subscription.status = 'active'
+            subscription.save()
 
-    if response.json()['status'] == 'succeeded':
-        payment.status = 'completed'
-        payment.save()
-        # Дополнительная логика (начисление услуг и т.д.)
+            # Отправка уведомления
+            send_mail(
+                'Подписка активирована',
+                f'Доступ к эксклюзивным объектам {subscription.developer.company} открыт!',
+                settings.DEFAULT_FROM_EMAIL,
+                [payment.user.email]
+            )
+        except AttributeError:
+            pass
 
     return render(request, 'payments/callback.html')
 

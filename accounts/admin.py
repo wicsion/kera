@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Property, Favorite, ContactRequest  # Импорт новых моделей
+from .models import User, Property, Favorite, ContactRequest, DeveloperProfile, \
+    BrokerSubscription, ExclusiveProperty  # Импорт новых моделей
 from .forms import UserRegistrationForm, UserAdminChangeForm
 
 class CustomUserAdmin(UserAdmin):
@@ -52,6 +53,18 @@ class ContactRequestAdmin(admin.ModelAdmin):
     list_display = ('requester', 'broker', 'property',  'created_at')
     list_filter = ('status', 'broker__user_type')
     raw_id_fields = ('requester',  'property',  'broker', )
+
+@admin.register(DeveloperProfile)
+class DeveloperProfileAdmin(admin.ModelAdmin):
+    list_display = ('company', 'user', 'is_verified')
+
+@admin.register(BrokerSubscription)
+class BrokerSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('broker', 'developer', 'status', 'end_date')
+
+@admin.register(ExclusiveProperty)
+class ExclusivePropertyAdmin(admin.ModelAdmin):
+    list_display = ('title', 'developer', 'price')
 
 admin.site.register(User, CustomUserAdmin)
 

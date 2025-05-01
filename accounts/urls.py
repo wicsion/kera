@@ -42,5 +42,7 @@ urlpatterns = [
     path('contact-request/<int:pk>/message/', MessageCreateView.as_view(), name='add_message'),
     path('contact-request/<int:pk>/status/<str:status>/', UpdateRequestStatusView.as_view(),name='update_request_status'),
     path('ajax/load-properties/', views.load_properties, name='load_properties'),
-
+    path('subscribe/<int:developer_id>/', views.SubscribeView.as_view(), name='subscribe'),
+    path('exclusive-properties/', views.ExclusivePropertiesView.as_view(), name='exclusive_properties'),
+    path('developers/', views.DevelopersListView.as_view(), name='developers_list'),
 ]

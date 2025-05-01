@@ -336,6 +336,34 @@
                         <div class="alert alert-info">Нет объектов</div>
                     {% endfor %}
                 </div>
+                 <!-- Эксклюзивные объекты -->
+                <div class="dashboard-section mt-4">
+                    <h3 class="section-title">💎 Эксклюзивные объекты</h3>
+                    <a href="{% url 'exclusive_properties' %}" class="btn btn-custom mb-3">
+                        Посмотреть эксклюзивные объекты
+                    </a>
+                    <div class="row">
+                        {% for sub in active_subscriptions %}
+                            <div class="col-md-6 mb-3">
+                                <div class="profile-card">
+                                    <h5>{{ sub.developer.company }}</h5>
+                                    <p class="small text-muted">
+                                        Подписка активна до: {{ sub.end_date|date:"d.m.Y" }}
+                                    </p>
+                                    <a href="{% url 'subscribe' sub.developer.id %}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Продлить
+                                    </a>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="alert alert-info">
+                                У вас нет активных подписок.
+                                <a href="{% url 'developers_list' %}">Найти застройщиков</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
 
                 <!-- Новые запросы -->
                 <div class="dashboard-section mt-4">

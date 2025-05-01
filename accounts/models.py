@@ -1,3 +1,5 @@
+from datetime import timezone
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -59,6 +61,11 @@ class User(AbstractUser):
             self.phone and self.phone.strip() != '',
             self.passport and self.passport.strip() != ''
         ])
+
+    @property
+    def days_remaining(self):
+        return (self.end_date - timezone.now()).days
+
 
 class UserActivity(models.Model):
     user = models.ForeignKey(
@@ -164,7 +171,7 @@ class Message(models.Model):
 
 
 class DeveloperProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='developer_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='accounts_developer_profile')
     company = models.CharField(max_length=255, verbose_name='Компания')
     description = models.TextField(verbose_name='Описание')
     is_verified = models.BooleanField(default=False, verbose_name='Верифицирован')
@@ -180,7 +187,7 @@ class BrokerSubscription(models.Model):
         ('canceled', 'Отменена')
     ]
 
-    broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='broker_subscriptions')
     developer = models.ForeignKey(DeveloperProfile, on_delete=models.CASCADE, related_name='subscribers')
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField()
@@ -189,6 +196,10 @@ class BrokerSubscription(models.Model):
 
     class Meta:
         unique_together = ('broker', 'developer')
+
+    @property
+    def is_active(self):
+        return self.status == 'active' and self.end_date >= timezone.now()
 
 
 class ExclusiveProperty(Property):
@@ -199,3 +210,14 @@ class ExclusiveProperty(Property):
     class Meta:
         verbose_name = 'Эксклюзивный объект'
         verbose_name_plural = 'Эксклюзивные объекты'
+
+
+class PropertyListing(models.Model):
+    broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings')
+    property = models.ForeignKey(Property, on_delete=models.CASCADE)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField()
+    is_featured = models.BooleanField(default=False)
+    payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True)
+    is_active = models.BooleanField(default=True)
+

@@ -18,8 +18,20 @@ import string
 
 from rest_framework.exceptions import PermissionDenied
 
-from .models import User, UserActivity, Subscription , Property, Favorite, ContactRequest, Message
+from .models import (User, UserActivity,
+                     Subscription ,
+                     Property,
+                     Favorite,
+                     ContactRequest,
+                     Message,
+                     DeveloperProfile,
+                     BrokerSubscription,
+                     ExclusiveProperty)
 from .forms import UserRegistrationForm, RoleSelectionForm, ProfileForm, ContactRequestForm
+from dateutil.relativedelta import relativedelta
+from django.utils import timezone
+
+from payments.models import Payment
 
 
 def home_view(request):
@@ -381,14 +393,27 @@ class SubscribeView(LoginRequiredMixin, View):
 
 
 class ExclusivePropertiesView(LoginRequiredMixin, ListView):
-    model = ExclusiveProperty
-    template_name = 'accounts/exclusive_properties.html'
+    template_name = 'accounts/exclusive_properties.html'  # ← Добавьте эту строку
     context_object_name = 'properties'
 
     def get_queryset(self):
         return ExclusiveProperty.objects.filter(
-            developer__in=self.request.user.subscriptions.filter(
+            developer__in=self.request.user.broker_subscriptions.filter(
                 status='active',
                 end_date__gte=timezone.now()
-            ).values('developer')
+            ).values('developer'),
+            subscription_required=True
         )
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_broker:
+            raise PermissionDenied("Доступно только для брокеров")
+        return super().dispatch(request, *args, **kwargs)
+
+class DevelopersListView(LoginRequiredMixin, ListView):
+    model = DeveloperProfile
+    template_name = 'accounts/exclusive_properties.html'
+    context_object_name = 'developers'
+
+    def get_queryset(self):
+        return DeveloperProfile.objects.filter(is_verified=True)
