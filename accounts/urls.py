@@ -1,4 +1,7 @@
 from django.urls import path
+
+
+from . import views
 from .views import (
     RegisterView,
     verify_email,
@@ -15,6 +18,7 @@ from .views import (
     ContactRequestView,
     ContactRequestDetailView,
     MessageCreateView,
+    UpdateRequestStatusView,
 
 )
 
@@ -36,6 +40,7 @@ urlpatterns = [
     path('contact-request/new/', ContactRequestView.as_view(), name='new_contact_request'),
     path('contact-request/<int:pk>/', ContactRequestDetailView.as_view(), name='contact_request_detail'),
     path('contact-request/<int:pk>/message/', MessageCreateView.as_view(), name='add_message'),
+    path('contact-request/<int:pk>/status/<str:status>/', UpdateRequestStatusView.as_view(),name='update_request_status'),
+    path('ajax/load-properties/', views.load_properties, name='load_properties'),
 
 ]
-

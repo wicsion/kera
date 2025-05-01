@@ -125,8 +125,8 @@ class ContactRequest(models.Model):
         ('completed', 'Завершено')
     ]
 
-    requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_requests')
-    broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_requests')
+    requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='brokers_sent_requests' )
+    broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='brokers_received_requests')
     property = models.ForeignKey(Property, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)

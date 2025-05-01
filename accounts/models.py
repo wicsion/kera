@@ -39,6 +39,10 @@ class User(AbstractUser):
         return f"{self.last_name} {self.first_name} {self.patronymic}".strip()
 
     @property
+    def is_client(self):
+        return self.user_type == self.UserType.CLIENT
+
+    @property
     def is_broker(self):
         return self.user_type == self.UserType.BROKER
 
@@ -135,8 +139,8 @@ class ContactRequest(models.Model):
         ('completed', 'Завершен'),
     ]
 
-    requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_requests')
-    broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_requests')
+    requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='accounts_sent_requests')
+    broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='accounts_received_requests')
     property = models.ForeignKey(Property, on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -157,3 +161,41 @@ class Message(models.Model):
 
     def __str__(self):
         return f"Сообщение от {self.sender} в запросе #{self.contact_request.id}"
+
+
+class DeveloperProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='developer_profile')
+    company = models.CharField(max_length=255, verbose_name='Компания')
+    description = models.TextField(verbose_name='Описание')
+    is_verified = models.BooleanField(default=False, verbose_name='Верифицирован')
+
+    def __str__(self):
+        return f"Профиль застройщика: {self.company}"
+
+
+class BrokerSubscription(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Активна'),
+        ('expired', 'Истекла'),
+        ('canceled', 'Отменена')
+    ]
+
+    broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    developer = models.ForeignKey(DeveloperProfile, on_delete=models.CASCADE, related_name='subscribers')
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    payment = models.OneToOneField('payments.Payment', on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        unique_together = ('broker', 'developer')
+
+
+class ExclusiveProperty(Property):
+    developer = models.ForeignKey(DeveloperProfile, on_delete=models.CASCADE)
+    is_exclusive = models.BooleanField(default=True)
+    subscription_required = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Эксклюзивный объект'
+        verbose_name_plural = 'Эксклюзивные объекты'

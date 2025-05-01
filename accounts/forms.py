@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.core.validators import RegexValidator
-from .models import User
+from .models import User, ContactRequest, Property
 
 
 class UserRegistrationForm(UserCreationForm):
@@ -108,3 +108,22 @@ class ProfileForm(forms.ModelForm):
         self.fields['first_name'].required = True
         self.fields['phone'].required = True
         self.fields['passport'].required = True
+
+
+class ContactRequestForm(forms.ModelForm):
+    class Meta:
+        model = ContactRequest
+        fields = ['broker', 'property']
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        self.fields['broker'].queryset = User.objects.filter(user_type=User.UserType.BROKER)
+        self.fields['property'].queryset = Property.objects.none()
+
+        if 'broker' in self.data:
+            try:
+                broker_id = int(self.data.get('broker'))
+                self.fields['property'].queryset = Property.objects.filter(creator_id=broker_id)
+            except (ValueError, TypeError):
+                pass

@@ -1,19 +1,56 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Отправить запрос брокеру</h2>
-    <form method="post">
+<style>
+    .registration-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-select {
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        width: 100%;
+    }
+
+    .loading-spinner {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-width: 2px;
+    }
+</style>
+
+<div class="registration-container">
+    <h2 class="text-2xl font-bold mb-4">📨 Отправить запрос брокеру</h2>
+
+    <form method="post" id="contactForm">
         {% csrf_token %}
-        <div class="mb-3">
-            <label class="form-label">Выберите брокера:</label>
+
+        <div class="mb-4">
+            <label class="block font-medium mb-2">Выберите брокера:</label>
             {{ form.broker }}
         </div>
-        <div class="mb-3">
-            <label class="form-label">Выберите объект (необязательно):</label>
+
+        <div class="mb-4">
+            <label class="block font-medium mb-2">Выберите объект (необязательно):</label>
             {{ form.property }}
+            <div id="propertyLoading" class="mt-2">
+                <div class="loading-spinner spinner-border text-primary d-none"></div>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Отправить запрос</button>
+
+        <button type="submit" class="btn btn-primary rounded-pill px-4 py-2">
+            <i class="bi bi-send mr-2"></i> Отправить запрос
+        </button>
     </form>
 </div>
+
+{% block extra_js %}
+<!-- JavaScript остается без изменений -->
+{% endblock %}
 {% endblock %}

@@ -49,9 +49,9 @@ class FavoriteAdmin(admin.ModelAdmin):
 
 @admin.register(ContactRequest)
 class ContactRequestAdmin(admin.ModelAdmin):
-    list_display = ('requester', 'broker', 'property', 'is_paid', 'created_at')
-    list_filter = ('is_paid', 'broker__user_type')
-    raw_id_fields = ('requester',  'property')
+    list_display = ('requester', 'broker', 'property',  'created_at')
+    list_filter = ('status', 'broker__user_type')
+    raw_id_fields = ('requester',  'property',  'broker', )
 
 admin.site.register(User, CustomUserAdmin)
 

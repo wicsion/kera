@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.views.generic import DetailView
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -7,15 +8,18 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy, reverse
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.views.generic import CreateView
 import random
 import string
 
+
+from rest_framework.exceptions import PermissionDenied
+
 from .models import User, UserActivity, Subscription , Property, Favorite, ContactRequest, Message
-from .forms import UserRegistrationForm, RoleSelectionForm, ProfileForm
+from .forms import UserRegistrationForm, RoleSelectionForm, ProfileForm, ContactRequestForm
 
 
 def home_view(request):
@@ -152,14 +156,15 @@ def dashboard_view(request):
     # Общие данные
     context.update({
         'activities': UserActivity.objects.filter(user=user).order_by('-timestamp')[:10],
-        'contact_requests': user.received_requests.all() if user.is_broker else []
+        'contact_requests': user.accounts_received_requests.all() if user.is_broker else []
     })
 
     # Данные по ролям
     if user.user_type == User.UserType.BROKER:
         context.update({
             'my_properties': user.created_properties.all(),
-            'subscriptions': user.subscriptions.filter(is_active=True)
+            'contact_requests': user.accounts_received_requests.filter(status='new').order_by('-created_at')[:5],
+            'active_requests': user.accounts_received_requests.filter(status='in_progress')
         })
     elif user.user_type == User.UserType.DEVELOPER:
         context['developer_properties'] = user.created_properties.filter(is_approved=True)
@@ -240,28 +245,74 @@ class ToggleFavoriteView(LoginRequiredMixin, View):
 
         return JsonResponse({'status': 'ok'})
 
-
-class ContactRequestView(LoginRequiredMixin, CreateView):
-    model = ContactRequest
-    fields = ['broker', 'property']
-    template_name = 'accounts/contact_request_form.html'
-
-    def form_valid(self, form):
-        form.instance.requester = self.request.user
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse('contact_request_detail', kwargs={'pk': self.object.pk})
-
+def load_properties(request):
+    broker_id = request.GET.get('broker_id')
+    properties = Property.objects.filter(creator_id=broker_id)
+    return render(request, 'accounts/property_dropdown.html', {'properties': properties})
 
 class ContactRequestDetailView(LoginRequiredMixin, DetailView):
     model = ContactRequest
     template_name = 'accounts/contact_request_detail.html'
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(
+            Q(requester=self.request.user) |
+            Q(broker=self.request.user)
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['messages'] = self.object.messages.all()
         return context
+
+
+
+class ContactRequestView(LoginRequiredMixin, CreateView):
+    model = ContactRequest
+    form_class = ContactRequestForm
+    template_name = 'accounts/contact_request_form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.requester = self.request.user
+        response = super().form_valid(form)
+
+        # Генерируем абсолютную ссылку на запрос
+        request_url = self.request.build_absolute_uri(
+            reverse('contact_request_detail', kwargs={'pk': self.object.pk})
+        )
+
+        # Отправка уведомления брокеру
+        if settings.EMAIL_HOST_USER:
+            subject = f'Новый запрос от {self.request.user.get_full_name()}'
+            html_message = render_to_string('emails/new_request_email.html', {
+                'contact_request': self.object,
+                'request_url': request_url,  # Теперь переменная определена
+                'broker': self.object.broker
+            })
+            send_mail(
+                subject,
+                '',  # Пустое текстовое сообщение
+                settings.DEFAULT_FROM_EMAIL,
+                [self.object.broker.email],
+                html_message=html_message  # Передаем HTML-контент
+            )
+
+        return response
+
+    def get_success_url(self):
+        return reverse('contact_request_detail', kwargs={'pk': self.object.pk})
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_client:
+            raise PermissionDenied("Только клиенты могут отправлять запросы")
+        return super().dispatch(request, *args, **kwargs)
+
 
 
 class MessageCreateView(LoginRequiredMixin, CreateView):
@@ -276,3 +327,68 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse('contact_request_detail', kwargs={'pk': self.kwargs['pk']})
+
+    def dispatch(self, request, *args, **kwargs):
+        contact_request = get_object_or_404(ContactRequest, pk=self.kwargs['pk'])
+        if request.user not in [contact_request.requester, contact_request.broker]:
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+class UpdateRequestStatusView(LoginRequiredMixin, View):
+    def post(self, request, pk, status):
+        contact_request = get_object_or_404(ContactRequest, pk=pk, broker=request.user)
+        contact_request.status = status
+        contact_request.save()
+        return redirect('contact_request_detail', pk=pk)
+
+
+class SubscribeView(LoginRequiredMixin, View):
+    def get(self, request, developer_id):
+        developer = get_object_or_404(DeveloperProfile, id=developer_id)
+        return render(request, 'accounts/subscribe.html', {
+            'developer': developer,
+            'user': request.user
+        })
+
+    def post(self, request, developer_id):
+        developer = get_object_or_404(DeveloperProfile, id=developer_id)
+        subscription_type = request.POST.get('subscription_type')
+
+        # Расчет стоимости
+        price_map = {
+            '1_month': 990,
+            '3_months': 2490,
+            '6_months': 4490
+        }
+
+        # Создание платежа
+        payment = Payment.objects.create(
+            user=request.user,
+            amount=price_map[subscription_type],
+            payment_method='card',
+            status='pending'
+        )
+
+        # Создание подписки
+        subscription = BrokerSubscription.objects.create(
+            broker=request.user,
+            developer=developer,
+            end_date=timezone.now() + relativedelta(months=int(subscription_type[0])),
+            payment=payment
+        )
+
+        return redirect('process_payment', payment_id=payment.id)
+
+
+class ExclusivePropertiesView(LoginRequiredMixin, ListView):
+    model = ExclusiveProperty
+    template_name = 'accounts/exclusive_properties.html'
+    context_object_name = 'properties'
+
+    def get_queryset(self):
+        return ExclusiveProperty.objects.filter(
+            developer__in=self.request.user.subscriptions.filter(
+                status='active',
+                end_date__gte=timezone.now()
+            ).values('developer')
+        )

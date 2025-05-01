@@ -1,179 +1,141 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}{{ broker.user.get_full_name }} | RealEstatePro{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm sticky-top" style="top: 20px;">
-                <div class="card-body text-center">
+<div class="registration-container">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Левая колонка -->
+        <div class="lg:col-span-1">
+            <div class="profile-card bg-white rounded-xl shadow-sm p-6 border-2 border-gray-100 sticky top-6">
+                <div class="text-center space-y-4">
                     {% if broker.avatar %}
-                    <img src="{{ broker.avatar.url }}" class="rounded-circle mb-3" width="200" height="200" alt="{{ broker.user.get_full_name }}">
+                    <img src="{{ broker.avatar.url }}"
+                         class="w-48 h-48 rounded-full object-cover mx-auto border-2 border-blue-200"
+                         alt="{{ broker.user.get_full_name }}">
                     {% else %}
-                    <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 200px; height: 200px;">
-                        <i class="bi bi-person-fill text-white" style="font-size: 4rem;"></i>
+                    <div class="w-48 h-48 rounded-full bg-blue-50 flex items-center justify-center mx-auto border-2 border-blue-200">
+                        <i class="bi bi-person text-6xl text-blue-400"></i>
                     </div>
                     {% endif %}
-                    <h3>{{ broker.user.get_full_name }}</h3>
-                    <p class="text-muted">{{ broker.specialization }}</p>
-                    
-                    <div class="d-flex justify-content-center mb-3">
-                        <div class="text-center px-3">
-                            <div class="h4 mb-0">{{ broker.experience }}+</div>
-                            <small class="text-muted">лет опыта</small>
+
+                    <h2 class="text-2xl font-bold text-gray-800">{{ broker.user.get_full_name }}</h2>
+                    <div class="badge-lg bg-blue-100 text-blue-800 rounded-full px-4 py-1 text-sm font-medium">
+                        {{ broker.specialization }}
+                    </div>
+
+                    <div class="stats-grid grid grid-cols-2 gap-4 bg-blue-50 rounded-xl p-4">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-blue-600">{{ broker.experience }}+</div>
+                            <div class="text-sm text-gray-600">лет опыта</div>
                         </div>
-                        <div class="text-center px-3 border-start">
-                            <div class="h4 mb-0">{{ broker_properties.count }}</div>
-                            <small class="text-muted">объектов</small>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-blue-600">{{ broker_properties.count }}</div>
+                            <div class="text-sm text-gray-600">объектов</div>
                         </div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <span class="badge bg-primary">Лицензия: {{ broker.license_number }}</span>
+
+                    <div class="license-badge flex items-center justify-center gap-2 text-sm text-gray-600">
+                        <i class="bi bi-shield-check text-blue-500"></i>
+                        Лицензия №{{ broker.license_number }}
                     </div>
-                    
-                    <button class="btn btn-primary w-100 mb-3" data-bs-toggle="modal" data-bs-target="#contactModal">
-                        <i class="bi bi-telephone"></i> Связаться
-                    </button>
-                    
-                    <a href="{% url 'broker-review' broker.id %}" class="btn btn-outline-primary w-100">
-                        <i class="bi bi-pencil-square"></i> Оставить отзыв
-                    </a>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white">
-                    <h4 class="mb-0">О брокере</h4>
-                </div>
-                <div class="card-body">
-                    <p>{{ broker.about }}</p>
-                    
-                    <h5 class="mt-4">Специализация</h5>
-                    <ul>
-                        {% for item in broker.specialization.split ',' %}
-                        <li>{{ item }}</li>
+
+        <!-- Правая колонка -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- О брокере -->
+            <div class="profile-card bg-white rounded-xl shadow-sm p-6 border-2 border-gray-100">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">О брокере</h3>
+                <p class="text-gray-600 leading-relaxed">{{ broker.about }}</p>
+
+                <div class="specialization-section mt-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Специализация</h4>
+                    <ul class="specialization-list grid grid-cols-2 gap-2">
+                        {% for item in specializations %}
+                        <li class="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm">{{ item|trim }}</li>
+                        {% empty %}
+                        <li class="text-gray-500">Не указано</li>
                         {% endfor %}
                     </ul>
                 </div>
             </div>
-            
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Объекты ({{ broker_properties.count }})</h4>
-                    <a href="{% url 'property-list' %}?broker={{ broker.id }}" class="btn btn-sm btn-outline-primary">
-                        Смотреть все
+
+            <!-- Объекты -->
+            <div class="profile-card bg-white rounded-xl shadow-sm p-6 border-2 border-gray-100">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                    <h3 class="text-xl font-bold text-gray-800">Объекты ({{ broker_properties.count }})</h3>
+                    <a href="{% url 'property-list' %}?broker={{ broker.id %}"
+                       class="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg border-2 border-blue-200 transition-colors">
+                        Все объекты →
                     </a>
                 </div>
-                <div class="card-body">
-                    <div class="row row-cols-1 row-cols-md-2 g-3">
-                        {% for property in broker_properties|slice:":4" %}
-                        <div class="col">
-                            <div class="card h-100">
-                                <img src="{{ property.main_image.url }}" class="card-img-top property-thumb" alt="{{ property.title }}">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ property.title }}</h5>
-                                    <p class="card-text text-muted">{{ property.location }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="h5 text-primary">{{ property.price }} ₽</span>
-                                        <span class="text-muted">{{ property.area }} м²</span>
-                                    </div>
-                                </div>
-                                <div class="card-footer bg-white border-top-0">
-                                    <a href="{% url 'property-detail' property.id %}" class="btn btn-sm btn-outline-primary w-100">
-                                        Подробнее
-                                    </a>
-                                </div>
+
+                <div class="properties-grid grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for property in broker_properties|slice:":4" %}
+                    <div class="property-card bg-white rounded-xl shadow-sm hover:shadow-md transition p-4 border-2 border-gray-100">
+                        <img src="{{ property.main_image.url }}"
+                             class="w-full h-48 object-cover rounded-lg mb-4"
+                             alt="{{ property.title }}">
+                        <div class="property-details space-y-3">
+                            <h4 class="font-semibold text-gray-800">{{ property.title }}</h4>
+                            <div class="price-area flex justify-between items-center">
+                                <span class="price text-blue-600 font-bold">{{ property.price }} ₽</span>
+                                <span class="area text-gray-600">{{ property.area }} м²</span>
                             </div>
+                            <a href="{% url 'property-detail' property.id %}"
+                               class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-lg transition-colors">
+                                Подробнее
+                            </a>
                         </div>
-                        {% empty %}
-                        <div class="col-12">
-                            <div class="alert alert-info">Нет доступных объектов</div>
-                        </div>
-                        {% endfor %}
                     </div>
+                    {% empty %}
+                    <div class="empty-state col-span-full text-center py-6 text-gray-500">
+                        Нет доступных объектов
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-            
-            <div class="card shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Отзывы ({{ reviews.count }})</h4>
-                    <div class="d-flex align-items-center">
-                        <span class="me-2">Рейтинг: {{ broker.rating|default:"-" }}/5</span>
-                        <div class="text-warning">
+
+            <!-- Отзывы -->
+            <div class="profile-card bg-white rounded-xl shadow-sm p-6 border-2 border-gray-100">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                    <h3 class="text-xl font-bold text-gray-800">Отзывы ({{ reviews.count }})</h3>
+                    <div class="rating flex items-center gap-2">
+                        <span class="text-lg font-medium">{{ broker.rating|default:"-" }}/5</span>
+                        <div class="stars flex text-yellow-400">
                             {% for i in "12345" %}
-                            <i class="bi bi-star{% if i|add:0 > broker.rating|default:0 %}-fill{% else %}-fill{% endif %}"></i>
+                            <i class="bi bi-star{% if i|add:0 <= broker.rating|default:0 %}-fill{% endif %} text-xl"></i>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
+
+                <div class="reviews-list space-y-6">
                     {% for review in reviews|slice:":3" %}
-                    <div class="mb-4 pb-3 border-bottom">
-                        <div class="d-flex justify-content-between mb-2">
-                            <h5>{{ review.client.get_full_name }}</h5>
-                            <div class="text-warning">
+                    <div class="review-item bg-gray-50 rounded-xl p-4 border-2 border-gray-100">
+                        <div class="review-header flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">{{ review.client.get_full_name }}</h4>
+                                <p class="text-sm text-gray-500">{{ review.created_at|date:"d.m.Y" }}</p>
+                            </div>
+                            <div class="review-stars flex text-yellow-400">
                                 {% for i in "12345" %}
                                 <i class="bi bi-star{% if i|add:0 <= review.rating %}-fill{% endif %}"></i>
                                 {% endfor %}
                             </div>
                         </div>
-                        <p class="text-muted small">{{ review.created_at|date:"d.m.Y" }}</p>
-                        <p>{{ review.comment }}</p>
+                        <p class="text-gray-600 leading-relaxed">{{ review.comment }}</p>
                     </div>
                     {% empty %}
-                    <div class="alert alert-info">Отзывов пока нет</div>
-                    {% endfor %}
-                    
-                    {% if reviews.count > 3 %}
-                    <div class="text-center mt-3">
-                        <a href="#" class="btn btn-outline-primary">Показать все отзывы</a>
+                    <div class="empty-state text-center py-6 text-gray-500">
+                        Отзывов пока нет
                     </div>
-                    {% endif %}
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Контактное модальное окно -->
-<div class="modal fade" id="contactModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Связаться с {{ broker.user.get_full_name }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label class="form-label">Ваше имя</label>
-                        <input type="text" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Телефон</label>
-                        <input type="tel" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Сообщение</label>
-                        <textarea class="form-control" rows="3"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Отправить</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .property-thumb {
-        height: 150px;
-        object-fit: cover;
-    }
-    .sticky-top {
-        position: sticky;
-        z-index: 100;
-    }
-</style>
 {% endblock %}

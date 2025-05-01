@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .registration-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .message-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .message-card.bg-primary {
+        border-color: #3b82f6;
+        background-color: #f0f9ff;
+    }
+
+    .custom-textarea {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        resize: vertical;
+    }
+    .badge-status {
+        border: 2px solid;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-weight: 600;
+        background: transparent !important;
+    }
+
+
+</style>
+
+<div class="registration-container">
+    <div class="chat-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-2xl font-bold">💬 Чат</h2>
+            <span class="badge bg-{{ object.status|yesno:'new:warning,in_progress:info,completed:success' }} p-2 px-4 rounded-pill">
+                {{ object.get_status_display }}
+            </span>
+        </div>
+
+        <div class="chat-messages" style="max-height: 400px; overflow-y: auto;">
+            {% for message in messages %}
+            <div class="message-card {% if message.sender == request.user %}bg-primary{% endif %}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <small class="font-medium">
+                        {% if message.sender == request.user %}Вы{% else %}{{ message.sender.get_full_name }}{% endif %}
+                    </small>
+                    <small class="text-muted">{{ message.created_at|date:"H:i" }}</small>
+                </div>
+                <p class="mb-0">{{ message.text }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if object.broker == request.user %}
+        <div class="mt-4">
+            {% if object.status == 'new' %}
+            <form method="post" action="{% url 'update_request_status' object.pk 'in_progress' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning rounded-pill px-4">Принять в работу</button>
+            </form>
+            {% elif object.status == 'in_progress' %}
+            <form method="post" action="{% url 'update_request_status' object.pk 'completed' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success rounded-pill px-4">Завершить запрос</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <form method="post" action="{% url 'add_message' object.pk %}" class="mt-4">
+        {% csrf_token %}
+        <textarea name="text" class="custom-textarea" placeholder="Введите сообщение..." required></textarea>
+        <button type="submit" class="btn btn-primary mt-3 rounded-pill px-4 py-2">
+            Отправить <i class="bi bi-send ml-2"></i>
+        </button>
+    </form>
+</div>
+{% endblock %}

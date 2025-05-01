@@ -3,14 +3,16 @@ from django.shortcuts import  get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from .models import BrokerProfile, BrokerReview
+from .models import BrokerProfile, BrokerReview, ContactRequest
 from properties.forms import PropertyForm
-from properties.models import PropertyType
 from accounts.models import Subscription
 from properties.models import Property
 from .forms import BrokerProfileForm, BrokerReviewForm
 from django.utils import timezone
 from django.views.generic import TemplateView
+
+from properties.models import Favorite
+
 
 class BrokerPropertyListView(LoginRequiredMixin, ListView):
     model = Property
@@ -48,6 +50,7 @@ class BrokerListView(ListView):
     def get_queryset(self):
         return BrokerProfile.objects.filter(is_archived=False, is_approved=True)
 
+
 class BrokerDetailView(DetailView):
     model = BrokerProfile
     template_name = 'brokers/broker_detail.html'
@@ -55,15 +58,22 @@ class BrokerDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        broker = self.object
+
+        # Добавляем обработку специализации
+        context['specializations'] = broker.specialization.split(',') if broker.specialization else []
+
         context['properties'] = Property.objects.filter(
             broker=self.object.user,
             status='active',
             is_approved=True
         )[:4]
+
         context['reviews'] = BrokerReview.objects.filter(
             broker=self.object,
             is_approved=True
         )[:5]
+
         return context
 
 

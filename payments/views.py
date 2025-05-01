@@ -1,7 +1,12 @@
-from django.shortcuts import render, redirect
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views import View
+
 from .models import Payment
 import requests  # Для API платежных систем
+
+from ..accounts.models import ContactRequest
 
 
 @login_required

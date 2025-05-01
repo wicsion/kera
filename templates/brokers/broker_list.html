@@ -1,86 +1,94 @@
 {% extends 'base.html' %}
+{% block title %}Брокеры недвижимости | RealEstatePro{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Брокеры недвижимости</h1>
-        <form class="d-flex" method="get">
-            <input class="form-control me-2" type="search" name="search" placeholder="Поиск брокеров...">
-            <button class="btn btn-outline-primary" type="submit">Найти</button>
+<div class="registration-container">
+    <div class="header-section mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Профессиональные риелторы</h1>
+
+        <form class="search-form">
+            <div class="relative">
+                <input type="search"
+                       name="search"
+                       placeholder="Поиск по имени или специализации..."
+                       class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                <button type="submit" class="absolute right-3 top-3 text-gray-400 hover:text-blue-600">
+                    <i class="bi bi-search text-xl"></i>
+                </button>
+            </div>
         </form>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    <div class="brokers-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for broker in brokers %}
-        <div class="col">
-            <div class="card h-100 shadow-sm">
-                <div class="position-relative">
-                    {% if broker.avatar %}
-                    <img src="{{ broker.avatar.url }}" class="card-img-top broker-avatar" alt="{{ broker.user.get_full_name }}">
-                    {% else %}
-                    <div class="bg-secondary broker-avatar d-flex align-items-center justify-content-center">
-                        <i class="bi bi-person-fill text-white" style="font-size: 3rem;"></i>
+        <div class="broker-card bg-white rounded-xl shadow-sm hover:shadow-md transition p-6 border-2 border-gray-100">
+            <div class="broker-header relative">
+                {% if broker.avatar %}
+                <img src="{{ broker.avatar.url }}"
+                     class="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-2 border-blue-200"
+                     alt="{{ broker.user.get_full_name }}">
+                {% else %}
+                <div class="w-32 h-32 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4 border-2 border-blue-200">
+                    <i class="bi bi-person-circle text-4xl text-blue-400"></i>
+                </div>
+                {% endif %}
+                <div class="rating-badge absolute top-2 right-2 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
+                    ★ {{ broker.rating|default:"-" }}
+                </div>
+            </div>
+
+            <div class="broker-body space-y-4">
+                <h3 class="text-xl font-bold text-center text-gray-800">{{ broker.user.get_full_name }}</h3>
+                <p class="text-center text-blue-600 font-medium">{{ broker.specialization }}</p>
+
+                <div class="broker-stats flex justify-center gap-4 text-gray-600">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-briefcase"></i>
+                        {{ broker.experience }}+ лет
                     </div>
-                    {% endif %}
-                    <div class="position-absolute top-0 end-0 bg-primary text-white px-2 py-1 m-2 small rounded">
-                        Рейтинг: {{ broker.rating|default:"-" }}/5
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-building"></i>
+                        {{ broker.property_set.count }}
                     </div>
                 </div>
-                <div class="card-body">
-                    <h5 class="card-title">{{ broker.user.get_full_name }}</h5>
-                    <p class="card-text text-muted">{{ broker.specialization }}</p>
-                    <div class="mb-3">
-                        <span class="badge bg-primary">Опыт: {{ broker.experience }} лет</span>
-                        <span class="badge bg-success ms-1">Лицензия: {{ broker.license_number }}</span>
-                    </div>
-                    <p class="card-text">{{ broker.about|truncatewords:20 }}</p>
-                </div>
-                <div class="card-footer bg-white border-top-0">
-                    <a href="{% url 'broker-detail' broker.id %}" class="btn btn-primary w-100">
-                        Подробнее <i class="bi bi-chevron-right"></i>
-                    </a>
-                </div>
+
+                <a href="{% url 'broker-detail' broker.id %}"
+                   class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-lg transition-colors">
+                    Подробнее
+                </a>
             </div>
         </div>
         {% empty %}
-        <div class="col-12">
-            <div class="alert alert-info">Брокеры не найдены</div>
+        <div class="empty-state col-span-full text-center py-12 text-gray-500">
+            Брокеры не найдены
         </div>
         {% endfor %}
     </div>
 
+    <!-- Пагинация -->
     {% if is_paginated %}
-    <nav class="mt-4">
-        <ul class="pagination justify-content-center">
-            {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a>
-            </li>
-            {% endif %}
-            
-            {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
-            {% else %}
-            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-            {% endif %}
-            {% endfor %}
-            
-            {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед</a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
+    <div class="pagination flex justify-center gap-2 mt-8">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}"
+           class="page-item px-4 py-2 rounded-lg border-2 border-gray-200 hover:bg-gray-50 transition">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        <a href="?page={{ num }}"
+           class="page-item px-4 py-2 rounded-lg border-2 {% if num == page_obj.number %}bg-blue-600 text-white border-blue-600{% else %}border-gray-200 hover:bg-gray-50{% endif %} transition">
+            {{ num }}
+        </a>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}"
+           class="page-item px-4 py-2 rounded-lg border-2 border-gray-200 hover:bg-gray-50 transition">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
     {% endif %}
 </div>
-
-<style>
-    .broker-avatar {
-        height: 250px;
-        object-fit: cover;
-        width: 100%;
-    }
-</style>
 {% endblock %}
