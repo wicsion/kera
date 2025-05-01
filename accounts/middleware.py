@@ -37,7 +37,8 @@ class ProfileCompletionMiddleware:
             '/accounts/login/',
             '/accounts/select-role/',
             '/accounts/dashboard/',
-            '/accounts/complete-registration/'  # Добавлено исключение
+            '/accounts/complete-registration/',
+            '/broker/'
         ]
 
         if request.user.is_authenticated:

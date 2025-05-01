@@ -1,3 +1,4 @@
+from django.http import HttpResponseForbidden
 from django.shortcuts import  get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -5,10 +6,11 @@ from django.urls import reverse_lazy
 from .models import BrokerProfile, BrokerReview
 from properties.forms import PropertyForm
 from properties.models import PropertyType
-from accounts.models import Subscription  # Импорт модели подписок
+from accounts.models import Subscription
 from properties.models import Property
 from .forms import BrokerProfileForm, BrokerReviewForm
 from django.utils import timezone
+from django.views.generic import TemplateView
 
 class BrokerPropertyListView(LoginRequiredMixin, ListView):
     model = Property
@@ -89,3 +91,19 @@ class BrokerReviewCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse_lazy('broker-detail', kwargs={'pk': self.kwargs['pk']})
+
+
+class BrokerDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'brokers/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        broker = self.request.user.broker_profile
+
+        context.update({
+            'my_properties': Property.objects.filter(broker=self.request.user),
+            'contact_requests': ContactRequest.objects.filter(broker=self.request.user),
+            'favorites': Favorite.objects.filter(property__broker=self.request.user),
+            'subscriptions': Subscription.objects.filter(user=self.request.user)
+        })
+        return context

@@ -10,8 +10,7 @@
         padding: 25px;
         background: #fff;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        max-width: 800px; /* уменьшить максимальную ширину */
-
+        max-width: 800px;
     }
 
     .section-title {
@@ -201,9 +200,9 @@
                         <h3 class="section-title mb-0">🌟 Избранное</h3>
                         <div class="btn-group">
                             <a class="btn btn-custom {% if active_tab == 'properties' %}active{% endif %}"
-                               href="?tab=properties">Объекты</a>
+                               href="{% url 'dashboard' %}?tab=properties">Объекты</a>
                             <a class="btn btn-custom {% if active_tab == 'brokers' %}active{% endif %}"
-                               href="?tab=brokers">Риелторы</a>
+                               href="{% url 'dashboard' %}?tab=brokers">Риелторы</a>
                         </div>
                     </div>
 
@@ -226,18 +225,30 @@
                             <div class="alert alert-info">Нет избранных объектов</div>
                         {% endfor %}
                     {% else %}
-                        {% for fav in favorite_brokers %}
+                        {% for fav in broker_favorites %}
                             <div class="profile-card">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h5>{{ fav.broker.get_full_name }}</h5>
+                                        <h5>
+                                            <a href="{% url 'broker_profile' pk=fav.broker.id %}">
+                                                {{ fav.broker.get_full_name }}
+                                            </a>
+                                        </h5>
                                         <small class="text-muted">Рейтинг: ★★★★☆</small>
                                     </div>
-                                    <button class="btn btn-danger btn-sm unlike-btn"
-                                            data-type="broker"
-                                            data-id="{{ fav.broker.id }}">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    <div class="d-flex gap-2">
+                                        <form method="POST" action="{% url 'contact_broker' pk=fav.broker.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="bi bi-envelope"></i> Запрос
+                                            </button>
+                                        </form>
+                                        <button class="btn btn-danger btn-sm unlike-btn"
+                                                data-type="broker"
+                                                data-id="{{ fav.broker.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         {% empty %}

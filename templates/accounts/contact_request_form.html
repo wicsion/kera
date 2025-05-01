@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Отправить запрос брокеру</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">Выберите брокера:</label>
+            {{ form.broker }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Выберите объект (необязательно):</label>
+            {{ form.property }}
+        </div>
+        <button type="submit" class="btn btn-primary">Отправить запрос</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
@@ -84,3 +85,13 @@ def toggle_favorite(request, pk):
         favorite.delete()
         return JsonResponse({'status': 'removed', 'is_favorite': False})
     return JsonResponse({'status': 'added', 'is_favorite': True})
+
+class BrokerFavoriteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        property = get_object_or_404(Property, pk=pk)
+        Favorite.objects.get_or_create(
+            user=request.user,
+            property=property,
+            is_broker_favorite=True
+        )
+        return JsonResponse({'status': 'added'})

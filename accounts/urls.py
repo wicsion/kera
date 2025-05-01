@@ -12,7 +12,9 @@ from .views import (
     CompleteRegistrationView,
     PropertyCreateView,
     ToggleFavoriteView,
-    ContactRequestView
+    ContactRequestView,
+    ContactRequestDetailView,
+    MessageCreateView,
 
 )
 
@@ -30,6 +32,10 @@ urlpatterns = [
     path('complete-registration/', CompleteRegistrationView.as_view(), name='complete_registration'),
     path('property/create/', PropertyCreateView.as_view(), name='create_property'),
     path('toggle-favorite/', ToggleFavoriteView.as_view(), name='toggle_favorite'),
-    path('contact/<int:broker_id>/', ContactRequestView.as_view(), name='contact_request'),
+    path('broker/<int:pk>/contact/', ContactRequestView.as_view(), name='contact_broker'),
+    path('contact-request/new/', ContactRequestView.as_view(), name='new_contact_request'),
+    path('contact-request/<int:pk>/', ContactRequestDetailView.as_view(), name='contact_request_detail'),
+    path('contact-request/<int:pk>/message/', MessageCreateView.as_view(), name='add_message'),
+
 ]
 

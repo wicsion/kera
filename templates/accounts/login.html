@@ -1,107 +1,100 @@
 {% extends 'base.html' %}
+{% block title %}Вход{% endblock %}
 
 {% block content %}
-<div class="container py-5 min-vh-100 d-flex align-items-center">
-    <div class="row justify-content-center w-100">
-        <div class="col-md-10 col-lg-8">
-            <div class="card shadow-lg border-0" style="border-radius: 2rem; border: 3px solid #dee2e6;">
-                <div class="card-body p-5">
-                    <h2 class="card-title text-center mb-4 display-3 fw-bold text-uppercase"
-                        style="text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
-                        С возвращением на RealEstatePro!
-                    </h2>
-
-                    <form method="post" novalidate class="mx-auto" style="max-width: 500px;">
-                        {% csrf_token %}
-
-                        <!-- Логин -->
-                        <div class="mb-4 text-center">
-                            <div class="mb-3">
-                                <span class="form-label fs-4 fw-bold d-block">ЛОГИН</span>
-                            </div>
-                            <input type="text"
-                                   name="username"
-                                   class="form-control form-control-lg rounded-pill px-4 text-center fs-4 border-3"
-                                   style="height: 65px; border-color: #6c757d !important; width: 80%; margin: 0 auto;"
-                                   required
-                                   autofocus>
-                        </div>
-
-                        <!-- Пароль -->
-                        <div class="mb-4 text-center">
-                            <div class="mb-3">
-                                <span class="form-label fs-4 fw-bold d-block">ПАРОЛЬ</span>
-                            </div>
-                            <input type="password"
-                                   name="password"
-                                   class="form-control form-control-lg rounded-pill px-4 text-center fs-4 border-3"
-                                   style="height: 65px; border-color: #6c757d !important; width: 80%; margin: 0 auto;"
-                                   required>
-                        </div>
-
-                        <!-- Чекбокс - отдельная секция -->
-                        <div class="row justify-content-center mb-4">
-                            <div class="col-12 text-center">
-                                <div class="form-check d-inline-block">
-                                    <input type="checkbox"
-                                           class="form-check-input rounded-circle border-2"
-                                           id="rememberMe"
-                                           style="transform: scale(1.8); margin-right: 12px;">
-                                    <label class="form-check-label fs-4 fw-bold">
-                                        ЗАПОМНИТЬ МЕНЯ
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Кнопка Входа -->
-                        <div class="mb-4 text-center">
-                            <button type="submit"
-                                    class="btn btn-primary btn-lg rounded-pill py-3 px-5 fs-4 fw-bold"
-                                    style="min-width: 280px; border: 3px solid #fff; letter-spacing: 1.5px;">
-                                ВОЙТИ
-                            </button>
-                        </div>
-
-
-
-                        <!-- Ссылки - отдельная секция -->
-                        <div class="row justify-content-center">
-                            <div class="col-12 text-center fs-5">
-                                <a href="{% url 'password_reset' %}"
-                                   class="text-decoration-none text-muted fw-bold me-3">
-                                    Забыли пароль? -
-                                </a>
-                                <a href="{% url 'register' %}"
-                                   class="text-decoration-none text-muted fw-bold">
-                                    Создать аккаунт
-                                </a>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
-    .rounded-pill {
-        border-radius: 50rem !important;
+    .registration-container {
+        max-width: 500px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    .form-control {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+
+    .custom-input {
+        width: 100%;
+        padding: 0.75rem 1rem; /* Исходный размер */
+        border: 2px solid #e5e7eb;
+        border-radius: 50rem;
+        font-size: 16px; /* Исходный размер */
+        transition: all 0.2s ease;
     }
-    .fw-bold {
-        font-weight: 700 !important;
+
+    .custom-input:focus {
+        border-color: #60a5fa !important; /* Голубая обводка */
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+        outline: none;
     }
-    .card {
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 50rem;
+        padding: 1rem 2rem; /* Исходный размер кнопки */
+        font-weight: 500;
+        font-size: 16px; /* Исходный размер */
+        transition: all 0.2s ease;
     }
-    .row.justify-content-center {
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 2px solid #dee2e6;
+
+    .btn-primary:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
     }
 </style>
+
+<div class="registration-container">
+    <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">
+        <i class="bi bi-box-arrow-in-right mr-2"></i>Вход в RealEstatePro
+    </h1>
+
+    <form method="post" class="space-y-6 mx-auto" style="max-width: 600px;">
+        {% csrf_token %}
+
+        <div class="space-y-4">
+            <input type="text"
+                   name="username"
+                   class="custom-input text-center"
+                   placeholder="Логин"
+                   required
+                   autofocus>
+
+            <input type="password"
+                   name="password"
+                   class="custom-input text-center"
+                   placeholder="Пароль"
+                   required>
+        </div>
+
+        <div class="flex items-center justify-between">
+            <div class="form-check">
+                <input type="checkbox"
+                       class="form-check-input rounded-circle border-2"
+                       id="rememberMe"
+                       style="transform: scale(1.5);">
+                <label class="form-check-label text-gray-700 ml-2">
+                    Запомнить меня
+                </label>
+            </div>
+            <a href="{% url 'password_reset' %}" class="text-blue-600 hover:underline">
+                Забыли пароль?
+            </a>
+        </div>
+
+        <button type="submit"
+                class="btn-primary w-full py-3">
+            <i class="bi bi-box-arrow-in-right"></i>
+            Войти
+        </button>
+
+        <div class="text-center pt-4">
+            <span class="text-gray-600">Нет аккаунта? </span>
+            <a href="{% url 'register' %}" class="text-blue-600 hover:underline">
+                Создать аккаунт
+            </a>
+        </div>
+    </form>
+</div>
 {% endblock %}

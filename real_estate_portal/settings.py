@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'developers.apps.DevelopersConfig',
     'clients.apps.ClientsConfig',
     'properties.apps.PropertiesConfig',
+    'payments.apps.PaymentsConfig',
 ]
 
 MIDDLEWARE = [

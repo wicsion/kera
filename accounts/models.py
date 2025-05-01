@@ -104,14 +104,56 @@ class Property(models.Model):
     likes = models.ManyToManyField(User, related_name='property_likes', blank=True)
 
 class Favorite(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='account_favorites' )
-    property = models.ForeignKey(Property, on_delete=models.CASCADE, null=True, blank=True, related_name='property_favorites' )
-    broker = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='broker_favorites')
+    FAVORITE_TYPES = [
+        ('client', 'Клиентский'),
+        ('broker', 'Брокерский')
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'account_favorites')
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, default=1 )
+
+    broker = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='broker_favorites'  # Добавьте это поле
+    )
+
+    favorite_type = models.CharField(
+        max_length=10,
+        choices=FAVORITE_TYPES,
+        default='client'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
+
 class ContactRequest(models.Model):
+    STATUS_CHOICES = [
+        ('new', 'Новый'),
+        ('in_progress', 'В обработке'),
+        ('completed', 'Завершен'),
+    ]
+
     requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_requests')
     broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_requests')
-    property = models.ForeignKey(Property, on_delete=models.CASCADE, null=True, related_name='contact_requests' )
-    is_paid = models.BooleanField(default=False)
+    property = models.ForeignKey(Property, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Запрос #{self.id} от {self.requester}"
+
+class Message(models.Model):
+    contact_request = models.ForeignKey(ContactRequest, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Сообщение от {self.sender} в запросе #{self.contact_request.id}"

@@ -43,15 +43,15 @@ class PropertyAdmin(admin.ModelAdmin):
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ('user', 'property', 'broker', 'created_at')
+    list_display = ('user', 'property', 'created_at')
     list_filter = ('user__user_type',)
-    raw_id_fields = ('user', 'property', 'broker')
+    raw_id_fields = ('user', 'property')
 
 @admin.register(ContactRequest)
 class ContactRequestAdmin(admin.ModelAdmin):
     list_display = ('requester', 'broker', 'property', 'is_paid', 'created_at')
     list_filter = ('is_paid', 'broker__user_type')
-    raw_id_fields = ('requester', 'broker', 'property')
+    raw_id_fields = ('requester',  'property')
 
 admin.site.register(User, CustomUserAdmin)
 

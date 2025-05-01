@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from accounts.models import User
+from properties.models import Property
 
 
 
@@ -116,3 +117,18 @@ class BrokerReview(models.Model):
         return f"Отзыв {self.client} для {self.broker} ({self.rating}/5)"
 
 
+
+class ContactRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Ожидает оплаты'),
+        ('paid', 'Оплачено'),
+        ('completed', 'Завершено')
+    ]
+
+    requester = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_requests')
+    broker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_requests')
+    property = models.ForeignKey(Property, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    payment_amount = models.DecimalField(max_digits=10, decimal_places=2, default=50.00)
+    transaction_id = models.CharField(max_length=100, blank=True)

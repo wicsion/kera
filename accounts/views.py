@@ -1,3 +1,4 @@
+from django.views.generic import DetailView
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
@@ -5,7 +6,7 @@ from django.views.generic import  UpdateView, ListView, TemplateView
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
@@ -13,7 +14,7 @@ from django.views.generic import CreateView
 import random
 import string
 
-from .models import User, UserActivity, Subscription , Property, Favorite, ContactRequest
+from .models import User, UserActivity, Subscription , Property, Favorite, ContactRequest, Message
 from .forms import UserRegistrationForm, RoleSelectionForm, ProfileForm
 
 
@@ -144,14 +145,14 @@ def dashboard_view(request):
     if not request.user.is_authenticated:
         return redirect('login')
 
-    context = {}
+    active_tab = request.GET.get('tab', 'properties')
     user = request.user
+    context = {'active_tab': active_tab}
 
     # Общие данные
     context.update({
-        'favorites': user.favorites.all(),
-        'contact_requests': user.received_requests.all() if user.is_broker else [],
-        'activities': UserActivity.objects.filter(user=user).order_by('-timestamp')[:10]
+        'activities': UserActivity.objects.filter(user=user).order_by('-timestamp')[:10],
+        'contact_requests': user.received_requests.all() if user.is_broker else []
     })
 
     # Данные по ролям
@@ -163,10 +164,11 @@ def dashboard_view(request):
     elif user.user_type == User.UserType.DEVELOPER:
         context['developer_properties'] = user.created_properties.filter(is_approved=True)
     elif user.user_type == User.UserType.CLIENT:
-        context.update({
-            'favorite_properties': user.account_favorites.filter(property__isnull=False),
-            'favorite_brokers': user.broker_favorites.all()
-        })
+        # Фильтрация данных для клиента
+        if active_tab == 'properties':
+            context['favorite_properties'] = user.account_favorites.filter(property__isnull=False)
+        else:
+            context['broker_favorites'] = user.broker_favorites.all()
 
     return render(request, 'accounts/dashboard.html', context)
 
@@ -239,16 +241,38 @@ class ToggleFavoriteView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'ok'})
 
 
-class ContactRequestView(LoginRequiredMixin, View):
-    def post(self, request, broker_id):
-        broker = get_object_or_404(User, id=broker_id)
-        property_id = request.POST.get('property_id')
+class ContactRequestView(LoginRequiredMixin, CreateView):
+    model = ContactRequest
+    fields = ['broker', 'property']
+    template_name = 'accounts/contact_request_form.html'
 
-        # Пока пропускаем платежную систему
-        ContactRequest.objects.create(
-            requester=request.user,
-            broker=broker,
-            property_id=property_id,
-            is_paid=True if settings.DEBUG else False
-        )
-        return redirect('dashboard')
+    def form_valid(self, form):
+        form.instance.requester = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('contact_request_detail', kwargs={'pk': self.object.pk})
+
+
+class ContactRequestDetailView(LoginRequiredMixin, DetailView):
+    model = ContactRequest
+    template_name = 'accounts/contact_request_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['messages'] = self.object.messages.all()
+        return context
+
+
+class MessageCreateView(LoginRequiredMixin, CreateView):
+    model = Message
+    fields = ['text']
+
+    def form_valid(self, form):
+        contact_request = get_object_or_404(ContactRequest, pk=self.kwargs['pk'])
+        form.instance.contact_request = contact_request
+        form.instance.sender = self.request.user
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('contact_request_detail', kwargs={'pk': self.kwargs['pk']})
