@@ -4,14 +4,26 @@
 {% block content %}
 <style>
     .registration-container {
-        max-width: 500px;
+        max-width: 440px;
         margin: 2rem auto;
         padding: 2rem;
         background: white;
-        border-radius: 1rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 1.25rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
     }
 
+    .password-container {
+        position: relative;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #64748b;
+    }
     .custom-input {
         width: 100%;
         padding: 0.75rem 1rem; /* Исходный размер */
@@ -46,55 +58,81 @@
 </style>
 
 <div class="registration-container">
-    <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">
-        <i class="bi bi-box-arrow-in-right mr-2"></i>Вход в RealEstatePro
+    <h1 class="text-2xl font-semibold text-center mb-8 text-gray-900">
+        <svg class="w-8 h-8 inline-block mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+        </svg>
+        Вход в систему
     </h1>
 
-    <form method="post" class="space-y-6 mx-auto" style="max-width: 600px;">
+    <form method="post" class="space-y-5">
         {% csrf_token %}
 
+        <!-- Поля формы -->
         <div class="space-y-4">
             <input type="text"
                    name="username"
-                   class="custom-input text-center"
+                   class="custom-input"
                    placeholder="Логин"
                    required
                    autofocus>
 
-            <input type="password"
-                   name="password"
-                   class="custom-input text-center"
-                   placeholder="Пароль"
-                   required>
+            <div class="password-container">
+                <input type="password"
+                       name="password"
+                       class="custom-input"
+                       placeholder="Пароль"
+                       required>
+                <span class="toggle-password" onclick="togglePassword(this)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                </span>
+            </div>
         </div>
 
-        <div class="flex items-center justify-between">
-            <div class="form-check">
+        <!-- Дополнительные опции -->
+        <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center space-x-2">
                 <input type="checkbox"
-                       class="form-check-input rounded-circle border-2"
                        id="rememberMe"
-                       style="transform: scale(1.5);">
-                <label class="form-check-label text-gray-700 ml-2">
-                    Запомнить меня
-                </label>
+                       class="w-4 h-4 border-gray-300 rounded focus:ring-blue-500">
+                <label for="rememberMe" class="text-gray-600">Запомнить меня</label>
             </div>
             <a href="{% url 'password_reset' %}" class="text-blue-600 hover:underline">
-                Забыли пароль?
+                Восстановить пароль
             </a>
         </div>
 
-        <button type="submit"
-                class="btn-primary w-full py-3">
-            <i class="bi bi-box-arrow-in-right"></i>
+        <!-- Кнопка входа -->
+        <button type="submit" class="btn-primary w-full hover:shadow-lg">
             Войти
         </button>
 
-        <div class="text-center pt-4">
-            <span class="text-gray-600">Нет аккаунта? </span>
-            <a href="{% url 'register' %}" class="text-blue-600 hover:underline">
+        <!-- Разделитель -->
+        <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-gray-200"></div>
+            </div>
+            <div class="relative flex justify-center">
+                <span class="px-3 bg-white text-gray-500 text-sm">Нет аккаунта?</span>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a href="{% url 'register' %}" class="text-blue-600 hover:underline text-sm">
                 Создать аккаунт
             </a>
         </div>
     </form>
 </div>
+
+<script>
+    function togglePassword(icon) {
+        const input = icon.previousElementSibling;
+        input.type = input.type === 'password' ? 'text' : 'password';
+        icon.querySelector('svg').classList.toggle('text-blue-600');
+    }
+</script>
 {% endblock %}

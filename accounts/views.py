@@ -1,8 +1,6 @@
 from django.db.models import Q
 from django.views.generic import DetailView
-from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
 from django.views.generic import  UpdateView, ListView, TemplateView
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -13,6 +11,9 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from django.views.generic import CreateView
 from django.views.generic import DeleteView
+from django.http import JsonResponse
+from django.views import View
+from .models import ContactRequest, Message
 import random
 import string
 
@@ -458,3 +459,46 @@ class ListingCreateView(LoginRequiredMixin, CreateView):
 class SubscriptionDeleteView(LoginRequiredMixin, DeleteView):
     model = BrokerSubscription
     success_url = reverse_lazy('subscription_management')
+
+
+class ChatAPIView(View):
+    def get(self, request, pk):
+        try:
+            contact_request = ContactRequest.objects.get(pk=pk)
+            if request.user not in [contact_request.requester, contact_request.broker]:
+                return JsonResponse({'error': 'Forbidden'}, status=403)
+
+            messages = contact_request.messages.all().values(
+                'id',
+                'text',
+                'created_at',
+                'sender__id',
+                'sender__first_name',
+                'attachment'
+            )
+            return JsonResponse(list(messages), safe=False)
+
+        except ContactRequest.DoesNotExist:
+            return JsonResponse({'error': 'Not found'}, status=404)
+
+
+class TypingAPIView(View):
+    def post(self, request, pk):
+        try:
+            contact_request = ContactRequest.objects.get(pk=pk)
+            # Логика отслеживания набора текста
+            return JsonResponse({'status': 'typing'})
+
+        except ContactRequest.DoesNotExist:
+            return JsonResponse({'error': 'Not found'}, status=404)
+
+
+
+class MessageCreateView(LoginRequiredMixin, CreateView):
+    model = Message
+    fields = ['text', 'attachment']  # Добавляем поле для вложений
+
+    def form_valid(self, form):
+        form.instance.contact_request = get_object_or_404(ContactRequest, pk=self.kwargs['pk'])
+        form.instance.sender = self.request.user
+        return super().form_valid(form)

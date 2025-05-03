@@ -162,7 +162,12 @@ class Message(models.Model):
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
-
+    attachment = models.FileField(
+        upload_to='chat_attachments/',
+        null=True,
+        blank=True,
+        verbose_name='Вложение'
+    )
     class Meta:
         ordering = ['created_at']
 

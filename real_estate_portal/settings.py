@@ -29,6 +29,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_filters',
     'widget_tweaks',
+    'channels',
+
 
     # Локальные приложения
     'accounts.apps.AccountsConfig',

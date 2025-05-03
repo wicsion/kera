@@ -42,7 +42,6 @@ urlpatterns = [
     path('broker/<int:pk>/contact/', ContactRequestView.as_view(), name='contact_broker'),
     path('contact-request/new/', ContactRequestView.as_view(), name='new_contact_request'),
     path('contact-request/<int:pk>/', ContactRequestDetailView.as_view(), name='contact_request_detail'),
-    path('contact-request/<int:pk>/message/', MessageCreateView.as_view(), name='add_message'),
     path('contact-request/<int:pk>/status/<str:status>/', UpdateRequestStatusView.as_view(),name='update_request_status'),
     path('ajax/load-properties/', views.load_properties, name='load_properties'),
     path('subscribe/<int:developer_id>/', views.SubscribeView.as_view(), name='subscribe'),
@@ -51,4 +50,6 @@ urlpatterns = [
     path('subscriptions/manage/', SubscriptionManagementView.as_view(), name='subscription_management'),
     path('listing/create/', ListingCreateView.as_view(), name='create_listing'),
     path('subscription/delete/<int:pk>/', SubscriptionDeleteView.as_view(), name='delete_subscription'),
+    path('api/chat/<int:pk>/', views.ChatAPIView.as_view(), name='chat-api'),
+    path('api/typing/<int:pk>/', views.TypingAPIView.as_view(), name='typing-api'),
 ]

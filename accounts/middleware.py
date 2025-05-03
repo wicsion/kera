@@ -38,7 +38,9 @@ class ProfileCompletionMiddleware:
             '/accounts/select-role/',
             '/accounts/dashboard/',
             '/accounts/complete-registration/',
-            '/broker/'
+            '/broker/',
+            '/api/chat/',
+            '/api/typing/'
         ]
 
         if request.user.is_authenticated:
