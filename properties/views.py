@@ -1,7 +1,10 @@
 from django.shortcuts import render, get_object_or_404
 from django.views import View
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import ( DetailView,
+                                   CreateView,
+                                  UpdateView,
+                                   DeleteView)
+from django.contrib.auth.mixins import (LoginRequiredMixin, UserPassesTestMixin)
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django_filters.views import FilterView
@@ -65,7 +68,12 @@ class PropertyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = 'properties/property_form.html'
 
     def test_func(self):
-        return self.request.user == self.get_object().user
+        obj = self.get_object()
+
+        return (
+            self.request.user == obj.broker or
+            self.request.user == obj.developer
+        )
 
     def get_success_url(self):
         return reverse_lazy('property-detail', kwargs={'pk': self.object.pk})
@@ -95,3 +103,14 @@ class BrokerFavoriteView(LoginRequiredMixin, View):
             is_broker_favorite=True
         )
         return JsonResponse({'status': 'added'})
+
+class PropertyDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Property
+    success_url = reverse_lazy('dashboard')
+
+    def test_func(self):
+        obj = self.get_object()
+        return (
+            self.request.user == obj.broker or
+            self.request.user == obj.developer
+        )

@@ -22,6 +22,7 @@ from .views import (
     SubscriptionManagementView,
     SubscriptionDeleteView,
     ListingCreateView,
+    PropertyDeleteView,
 
 )
 
@@ -52,4 +53,6 @@ urlpatterns = [
     path('subscription/delete/<int:pk>/', SubscriptionDeleteView.as_view(), name='delete_subscription'),
     path('api/chat/<int:pk>/', views.ChatAPIView.as_view(), name='chat-api'),
     path('api/typing/<int:pk>/', views.TypingAPIView.as_view(), name='typing-api'),
+    path('contact-request/<int:pk>/message/', MessageCreateView.as_view(), name='add_message'),
+    path('properties/<int:pk>/delete/', PropertyDeleteView.as_view(), name='property-delete'),
 ]

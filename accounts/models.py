@@ -226,3 +226,15 @@ class PropertyListing(models.Model):
     payment = models.ForeignKey('payments.Payment', on_delete=models.SET_NULL, null=True)
     is_active = models.BooleanField(default=True)
 
+class StatusLog(models.Model):
+    contact_request = models.ForeignKey(ContactRequest, on_delete=models.CASCADE, related_name='status_logs')
+    status = models.CharField(max_length=20, choices=ContactRequest.STATUS_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.get_status_display()} - {self.timestamp.strftime('%d.%m.%Y %H:%M')}"
+

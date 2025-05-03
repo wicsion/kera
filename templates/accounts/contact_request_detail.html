@@ -2,222 +2,260 @@
 {% load static %}
 
 {% block content %}
+<!-- Блок системных сообщений -->
+{% if messages %}
+<div class="fixed top-4 right-4 z-50">
+    {% for message in messages %}
+    <div class="notification notification-{{ message.tags }}">
+        {{ message }}
+        <button class="ml-2" onclick="this.parentElement.remove()">&times;</button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <style>
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 15px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+    }
+    .notification-error {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
     .registration-container {
         max-width: 1000px;
         margin: 2rem auto;
         padding: 2rem;
         background: white;
-        border-radius: 1rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 1.25rem;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
+        border: 1px solid rgba(59, 130, 246, 0.1);
     }
 
     .chat-card {
         border: 2px solid #e5e7eb;
-        border-radius: 0.75rem;
+        border-radius: 1rem;
         padding: 1.5rem;
         margin-bottom: 2rem;
+        transition: all 0.2s ease;
+        background: white;
     }
 
     .message-card {
         border: 2px solid #e5e7eb;
-        border-radius: 0.5rem;
-        padding: 1rem;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
         margin-bottom: 1rem;
         transition: all 0.2s ease;
-        position: relative;
+        background: white;
     }
 
-    .message-card.bg-primary {
+    .message-card.active {
         border-color: #3b82f6;
         background-color: #f0f9ff;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
     }
 
-    .message-card.new-message {
-        animation: highlight 1.5s ease;
+    .gradient-header {
+        background: linear-gradient(45deg, #3b82f6, #6366f1);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
     }
 
-    @keyframes highlight {
-        from { background: rgba(59, 130, 246, 0.2); }
-        to { background: initial; }
-    }
-
-    .custom-textarea {
-        width: 100%;
-        padding: 1rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 0.5rem;
-        resize: vertical;
-    }
-
-    .badge-status {
-        border: 2px solid;
+    .status-badge {
+        padding: 6px 18px;
         border-radius: 20px;
-        padding: 4px 12px;
         font-weight: 600;
-        background: transparent !important;
+        background: rgba(59, 130, 246, 0.1);
+        border: 2px solid;
     }
 
-    .avatar-sm {
-        width: 32px;
-        height: 32px;
+    .custom-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .oval-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
         object-fit: cover;
+        border: 2px solid #3b82f6;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.98); opacity: 0.9; }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(0.98); opacity: 1; }
     }
 </style>
 
 <div class="registration-container">
+    <!-- Заголовок -->
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold gradient-header mb-2">
+            <i class="fas fa-comments mr-2"></i>Чат с {{ object.broker.get_full_name }}
+        </h1>
+        <span class="status-badge border-{{ object.status|yesno:'new:blue-500,in_progress:blue-300,completed:green-500' }}">
+            {{ object.get_status_display }}
+        </span>
+    </div>
+
+    <!-- Сообщения -->
     <div class="chat-card">
-        <!-- Заголовок и статус -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="text-2xl font-bold">
-                <i class="fas fa-comments"></i> Чат
-            </h2>
-            <span class="badge bg-{{ object.status|yesno:'new:warning,in_progress:info,completed:success' }} p-2 px-4 rounded-pill">
-                {{ object.get_status_display }}
-            </span>
-        </div>
-
-        <!-- Сообщения -->
-        <div class="chat-messages" style="max-height: 400px; overflow-y: auto;">
-            {% for message in messages %}
-                {% ifchanged message.created_at.date %}
-                    <div class="text-center text-muted my-3">
-                        {{ message.created_at|date:"d M Y" }}
-                    </div>
-                {% endifchanged %}
-
-                <div class="message-card {% if message.sender == request.user %}bg-primary{% endif %}" id="msg-{{ message.id }}">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="d-flex align-items-center gap-2">
-                            <!-- Аватар -->
+        <div class="scroll-container" style="max-height: 60vh; overflow-y: auto;">
+            {% for message in chat_messages %}
+    <div class="message-card {% if message.sender == request.user %}active{% endif %}"
+         id="msg-{{ message.id }}">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
                             {% if message.sender.avatar %}
-                                <img src="{{ message.sender.avatar.url }}"
-                                     class="avatar-sm rounded-circle">
+                                <img src="{{ message.sender.avatar.url }}" class="oval-avatar">
                             {% else %}
-                                <div class="avatar-sm rounded-circle bg-secondary d-flex align-items-center justify-content-center">
-                                    <i class="fas fa-user text-white"></i>
+                                <div class="oval-avatar bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-user text-blue-500"></i>
                                 </div>
                             {% endif %}
-                            <small class="font-medium">
-                                {% if message.sender == request.user %}Вы{% else %}{{ message.sender.get_full_name }}{% endif %}
-                            </small>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <small class="text-muted">{{ message.created_at|date:"H:i" }}</small>
-                            <!-- Кнопки редактирования -->
-                            {% if message.sender == request.user %}
-                                <div class="btn-group">
-                                    <button class="btn btn-link text-muted p-0"
-                                            onclick="editMessage({{ message.id }})">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-link text-danger p-0"
-                                            onclick="deleteMessage({{ message.id }})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            {% endif %}
+                            <div>
+                                <h4 class="font-semibold">
+                                    {% if message.sender == request.user %}Вы{% else %}{{ message.sender.get_full_name }}{% endif %}
+                                </h4>
+                                <span class="text-sm text-gray-500">{{ message.created_at|date:"d M Y H:i" }}</span>
+                            </div>
                         </div>
                     </div>
-                    <!-- Текст сообщения -->
-                    <p class="mb-0">{{ message.text }}</p>
-                    <!-- Вложения -->
+
+                    <p class="text-gray-800 mb-2">{{ message.text }}</p>
+
                     {% if message.attachment %}
-                        <div class="mt-2">
-                            <a href="{{ message.attachment.url }}"
-                               target="_blank"
-                               class="btn btn-light border btn-sm">
-                                <i class="fas fa-paperclip"></i> {{ message.get_filename }}
-                            </a>
-                        </div>
+                        <a href="{{ message.attachment.url }}" target="_blank"
+                           class="inline-flex items-center text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-paperclip mr-2"></i>{{ message.get_filename }}
+                        </a>
                     {% endif %}
                 </div>
             {% endfor %}
         </div>
-
-        <!-- Управление статусом (для брокера) -->
-        {% if object.broker == request.user %}
-            <div class="mt-4">
-                {% if object.status == 'new' %}
-                    <form method="post" action="{% url 'update_request_status' object.pk 'in_progress' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-warning rounded-pill px-4">
-                            <i class="fas fa-tools"></i> Принять в работу
-                        </button>
-                    </form>
-                {% elif object.status == 'in_progress' %}
-                    <form method="post" action="{% url 'update_request_status' object.pk 'completed' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success rounded-pill px-4">
-                            <i class="fas fa-check"></i> Завершить запрос
-                        </button>
-                    </form>
-                {% endif %}
-            </div>
-        {% endif %}
     </div>
 
-    <!-- Форма отправки сообщения -->
-    <form method="post" action="{% url 'add_message' object.pk %}" class="mt-4" enctype="multipart/form-data" id="chatForm">
-        {% csrf_token %}
-        <!-- Поле для файлов -->
-        <div class="d-flex align-items-center gap-2 mb-3">
-            <input type="file" name="attachment" id="fileInput" class="d-none">
-            <label for="fileInput" class="btn btn-light border">
-                <i class="fas fa-paperclip"></i>
-            </label>
-            <span id="fileName" class="text-muted small"></span>
-        </div>
-        <!-- Текстовое поле -->
-        <textarea name="text"
-                  class="custom-textarea"
-                  placeholder="Введите сообщение..."
-                  required
-                  id="messageInput"></textarea>
-        <button type="submit" class="btn btn-primary mt-3 rounded-pill px-4 py-2">
-            Отправить <i class="fas fa-paper-plane ml-2"></i>
-        </button>
-    </form>
+    <!-- Управление статусом -->
+    {% if object.broker == request.user %}
+    <div class="flex justify-center gap-4 my-6">
+        {% if object.status == 'new' %}
+            <form method="post" action="{% url 'update_request_status' object.pk 'in_progress' %}"
+                  class="animate-pulse">
+                {% csrf_token %}
+                <button type="submit" class="bg-blue-100 text-blue-600 px-6 py-2 rounded-full
+                       hover:bg-blue-200 transition-all">
+                    <i class="fas fa-play-circle mr-2"></i>Принять в работу
+                </button>
+            </form>
+        {% elif object.status == 'in_progress' %}
+            <form method="post" action="{% url 'update_request_status' object.pk 'completed' %}">
+                {% csrf_token %}
+                <button type="submit" class="bg-green-100 text-green-600 px-6 py-2 rounded-full
+                       hover:bg-green-200 transition-all">
+                    <i class="fas fa-check-circle mr-2"></i>Завершить
+                </button>
+            </form>
+        {% endif %}
+    </div>
+    {% endif %}
 
-    <!-- История статусов -->
-    <div class="mt-4">
-        <h5><i class="fas fa-history"></i> История изменений</h5>
-        {% for log in object.status_logs.all %}
-            <div class="text-muted small mt-2">
-                <i class="fas fa-clock"></i> {{ log.timestamp|date:"d M Y H:i" }} —
-                Статус изменен на <strong>{{ log.get_status_display }}</strong>
+    <!-- Форма сообщения -->
+    {% if object.status != 'completed' %}
+    <div class="chat-card">
+        <form method="post" action="{% url 'add_message' object.pk %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="flex items-center gap-3 mb-4">
+                <input type="file" name="attachment" id="fileInput" class="hidden">
+                <label for="fileInput" class="cursor-pointer bg-blue-100 p-3 rounded-lg
+                       hover:bg-blue-200 transition-colors">
+                    <i class="fas fa-paperclip text-blue-600"></i>
+                </label>
+                <span id="fileName" class="text-sm text-gray-500"></span>
             </div>
-        {% empty %}
-            <div class="text-muted small">Нет записей</div>
-        {% endfor %}
+
+            <textarea name="text"
+                      class="custom-input mb-4"
+                      placeholder="Напишите сообщение..."
+                      rows="4"
+                      required></textarea>
+
+            <button type="submit"
+                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white
+                           py-3 rounded-lg hover:from-blue-700 hover:to-purple-700
+                           transition-all font-medium">
+                <i class="fas fa-paper-plane mr-2"></i>Отправить сообщение
+            </button>
+        </form>
+    </div>
+{% else %}
+<div class="notification notification-error" id="chat-closed-notification">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    Чат завершен, отправка сообщений невозможна
+    <button class="ml-2" onclick="this.parentElement.remove()">&times;</button>
+</div>
+{% endif %}
+
+    <!-- История изменений -->
+    <div class="chat-card mt-6">
+        <h3 class="text-xl font-bold gradient-header mb-4">
+            <i class="fas fa-history mr-2"></i>История статусов
+        </h3>
+
+        <div class="space-y-3">
+            {% for log in object.status_logs.all %}
+                <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                    <i class="fas fa-clock text-gray-400"></i>
+                    <span class="text-sm">
+                        {{ log.timestamp|date:"d M Y H:i" }} —
+                        <span class="font-medium">{{ log.get_status_display }}</span>
+                    </span>
+                </div>
+            {% empty %}
+                <div class="text-center text-gray-500 py-4">
+                    <i class="fas fa-ban mr-2"></i>Нет истории изменений
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
-<!-- Скрипты -->
 <script>
-    // Автоскролл к новым сообщениям
-    const messagesContainer = document.querySelector('.chat-messages');
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+   // Автоматическое скрытие через 2 секунды
+    setTimeout(() => {
+        const notification = document.getElementById('chat-closed-notification');
+        if (notification) notification.remove();
+    }, 2000);
 
-    // Отслеживание ввода текста
-    document.getElementById('messageInput').addEventListener('input', () => {
-        fetch(`/api/typing/{{ object.pk }}/`, { method: 'POST' });
+
+    // Анимации
+    document.querySelectorAll('.message-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-3px)';
+            card.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.1)';
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'none';
+            card.style.boxShadow = 'none';
+        });
     });
 
-    // Обработчик файлов
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        document.getElementById('fileName').textContent = e.target.files[0]?.name || '';
-    });
-
-    // Автообновление чата
-    setInterval(() => {
-        fetch(`/api/chat/{{ object.pk }}/`)
-            .then(response => response.text())
-            .then(html => {
-                document.querySelector('.chat-messages').innerHTML = html;
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            });
-    }, 5000);
+    // Автоскролл
+    const container = document.querySelector('.scroll-container');
+    container.scrollTop = container.scrollHeight;
 </script>
-
 {% endblock %}

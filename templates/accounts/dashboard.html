@@ -427,9 +427,15 @@
                                            class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 w-full text-center">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 w-full">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                         <form method="POST" action="{% url 'property-delete' prop.id %}" class="w-full">
+        {% csrf_token %}
+        <button
+            type="submit"
+            onclick="return confirm('Вы уверены, что хотите удалить этот объект?')"
+            class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 w-full">
+            <i class="fas fa-trash"></i>
+        </button>
+                                             </form>
                                     </div>
                                 </div>
                             </div>

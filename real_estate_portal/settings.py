@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'django_filters',
     'widget_tweaks',
     'channels',
+    'corsheaders',
 
 
     # Локальные приложения
@@ -51,6 +52,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'accounts.middleware.ActivityLoggerMiddleware',
     'accounts.middleware.ProfileCompletionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'real_estate_portal.urls'

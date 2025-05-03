@@ -13,13 +13,12 @@ from django.views.generic import CreateView
 from django.views.generic import DeleteView
 from django.http import JsonResponse
 from django.views import View
-from .models import ContactRequest, Message
+from django.contrib import messages
+from .models import  StatusLog
 import random
 import string
-
-
+from django.contrib.auth.mixins import UserPassesTestMixin
 from rest_framework.exceptions import PermissionDenied
-
 from .models import (User, UserActivity,
                      Subscription,
                      Property,
@@ -29,7 +28,10 @@ from .models import (User, UserActivity,
                      DeveloperProfile,
                      BrokerSubscription,
                      ExclusiveProperty, PropertyListing)
-from .forms import UserRegistrationForm, RoleSelectionForm, ProfileForm, ContactRequestForm
+
+from .forms import (UserRegistrationForm, RoleSelectionForm,
+                    ProfileForm, ContactRequestForm)
+
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 
@@ -175,11 +177,12 @@ def dashboard_view(request):
 
     # Данные по ролям
     if user.user_type == User.UserType.BROKER:
-        context.update({
-            'my_properties': user.created_properties.all(),
-            'contact_requests': user.accounts_received_requests.filter(status='new').order_by('-created_at')[:5],
-            'active_requests': user.accounts_received_requests.filter(status='in_progress')
-        })
+        if user.user_type == User.UserType.BROKER:
+            context.update({
+                'my_properties': user.created_properties.all(),
+                'all_requests': user.accounts_received_requests.all().order_by('-created_at'),
+                'active_requests_count': user.accounts_received_requests.filter(status='in_progress').count()
+            })
     elif user.user_type == User.UserType.DEVELOPER:
         context['developer_properties'] = user.created_properties.filter(is_approved=True)
     elif user.user_type == User.UserType.CLIENT:
@@ -270,6 +273,7 @@ def load_properties(request):
     properties = Property.objects.filter(creator_id=broker_id)
     return render(request, 'accounts/property_dropdown.html', {'properties': properties})
 
+
 class ContactRequestDetailView(LoginRequiredMixin, DetailView):
     model = ContactRequest
     template_name = 'accounts/contact_request_detail.html'
@@ -283,9 +287,8 @@ class ContactRequestDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['messages'] = self.object.messages.all()
+        context['chat_messages'] = self.object.messages.all()  # Переименовано
         return context
-
 
 
 class ContactRequestView(LoginRequiredMixin, CreateView):
@@ -337,7 +340,7 @@ class ContactRequestView(LoginRequiredMixin, CreateView):
 
 class MessageCreateView(LoginRequiredMixin, CreateView):
     model = Message
-    fields = ['text']
+    fields = ['text', 'attachment']  # Объединенная версия с вложениями
 
     def form_valid(self, form):
         contact_request = get_object_or_404(ContactRequest, pk=self.kwargs['pk'])
@@ -350,15 +353,25 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         contact_request = get_object_or_404(ContactRequest, pk=self.kwargs['pk'])
-        if request.user not in [contact_request.requester, contact_request.broker]:
-            raise PermissionDenied
+        if contact_request.status == 'completed':
+            messages.error(request, "Чат завершен, отправка сообщений невозможна")
+            return redirect('contact_request_detail', pk=contact_request.pk)
         return super().dispatch(request, *args, **kwargs)
+
 
 class UpdateRequestStatusView(LoginRequiredMixin, View):
     def post(self, request, pk, status):
         contact_request = get_object_or_404(ContactRequest, pk=pk, broker=request.user)
+        previous_status = contact_request.status
         contact_request.status = status
         contact_request.save()
+
+        # Создаем запись в истории статусов
+        StatusLog.objects.create(
+            contact_request=contact_request,
+            status=status,
+            changed_by=request.user
+        )
         return redirect('contact_request_detail', pk=pk)
 
 
@@ -483,6 +496,10 @@ class ChatAPIView(View):
 
 
 class TypingAPIView(View):
+    def get(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+
     def post(self, request, pk):
         try:
             contact_request = ContactRequest.objects.get(pk=pk)
@@ -493,12 +510,23 @@ class TypingAPIView(View):
             return JsonResponse({'error': 'Not found'}, status=404)
 
 
+class PropertyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Property
+    fields = ['title', 'description', 'price']
+    template_name = 'accounts/property_create.html'
+    success_url = reverse_lazy('dashboard')
 
-class MessageCreateView(LoginRequiredMixin, CreateView):
-    model = Message
-    fields = ['text', 'attachment']  # Добавляем поле для вложений
+    # Проверка прав
+    def test_func(self):
+        return self.request.user == self.get_object().creator  # Используем creator вместо user
 
     def form_valid(self, form):
-        form.instance.contact_request = get_object_or_404(ContactRequest, pk=self.kwargs['pk'])
-        form.instance.sender = self.request.user
+        form.instance.creator = self.request.user
         return super().form_valid(form)
+
+class PropertyDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Property
+    success_url = reverse_lazy('dashboard')
+
+    def test_func(self):
+        return self.request.user == self.get_object().creator  # Аналогичная проверка

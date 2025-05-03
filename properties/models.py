@@ -99,7 +99,7 @@ class Property(models.Model):
         null=True,
         blank=True,
         related_name='developer_properties',
-        verbose_name=_('Застройщик')
+        verbose_name = _('Застройщик')
     )
     is_premium = models.BooleanField(
         default=False,
